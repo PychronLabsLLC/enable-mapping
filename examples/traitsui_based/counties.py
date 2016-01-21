@@ -31,15 +31,14 @@ class SingleMapView(ModelView):
 
 
 def main():
-    tile_layer = MBTileManager(filename = 'map.mbtiles',
-                               min_level = 2,
-                               max_level = 4)
+    tile_layer = MBTileManager(filename='map.mbtiles',
+                               min_level=2, max_level=4)
 
     url_pattern = '/v3/mapbox.mapbox-simple/%(zoom)d/%(row)d/%(col)d.png'
     tile_layer = HTTPTileManager(min_level=0, max_level=15,
                                  server='d.tiles.mapbox.com', url=url_pattern)
 
-    canvas = MappingCanvas(tile_cache = tile_layer)
+    canvas = MappingCanvas(tile_cache=tile_layer)
     canvas.overlays.append(GeoJSONOverlay(component=canvas,
                                           geojs_filename='counties.geojs'))
 
