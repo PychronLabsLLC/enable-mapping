@@ -1,17 +1,20 @@
-""" Demo of a simple Enable canvas displaying all US counties as an overlay.
-Counties data is loaded from a local geojson file.
+""" Demo of a simple Enable canvas displaying all US counties as an overlay on
+top of a cached world map. Counties data is loaded from a local geojson file.
 
 This is the TraitsUI version of the corresponding demo in the enaml_based
 example folder.
 """
-
+import os.path as pth
 from traits.api import HasTraits, Instance
 from traitsui.api import Item, ModelView, View
 from enable.api import ComponentEditor
 from enable.tools.api import ViewportPanTool
 
 from mapping.enable.api import MappingCanvas, MappingViewport, MBTileManager, \
-                               GeoJSONOverlay, HTTPTileManager
+                               GeoJSONOverlay
+
+
+HERE = pth.dirname(__file__)
 
 
 class SingleMap(HasTraits):
@@ -31,12 +34,9 @@ class SingleMapView(ModelView):
 
 
 def main():
-    tile_layer = MBTileManager(filename='map.mbtiles',
+    tiles_path = pth.join(HERE, "..", "data", "map.mbtiles")
+    tile_layer = MBTileManager(filename=tiles_path,
                                min_level=2, max_level=4)
-
-    url_pattern = '/v3/mapbox.mapbox-simple/%(zoom)d/%(row)d/%(col)d.png'
-    tile_layer = HTTPTileManager(min_level=0, max_level=15,
-                                 server='d.tiles.mapbox.com', url=url_pattern)
 
     canvas = MappingCanvas(tile_cache=tile_layer)
     canvas.overlays.append(GeoJSONOverlay(component=canvas,
