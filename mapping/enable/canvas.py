@@ -30,11 +30,10 @@ class MappingCanvas(Canvas):
 
     def __blank_tile_default(self):
         import pkg_resources
-        from PIL import Image as pil
-        import ImageDraw
-        import ImageFont
+        from PIL import Image as PilImage
+        from PIL import ImageDraw, ImageFont
 
-        im = pil.new('RGB', (256, 256), (234, 224, 216))
+        im = PilImage.new('RGB', (256, 256), (234, 224, 216))
 
         text = 'Image not available'
         try:
