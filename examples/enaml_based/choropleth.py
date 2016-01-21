@@ -1,4 +1,4 @@
-
+import os.path as pth
 import numpy
 import pandas
 import enaml
@@ -16,9 +16,8 @@ from chaco.tools.api import PanTool, ZoomTool
 
 from mapping.chaco.api import ChoroplethPlot
 
-#===============================================================================
-# # Create the Chaco plot.
-#===============================================================================
+HERE = pth.dirname(__file__)
+
 
 def create_colorbar(plt):
     colormap = plt.color_mapper
@@ -32,13 +31,13 @@ def create_colorbar(plt):
     return colorbar
 
 def _create_plot_component(max_pop, index_ds, value_ds, color_ds, paths):
-    
+
     tile_cache =  HTTPTileManager(min_level=2, max_level=4,
                                   server='tile.cloudmade.com',
                                   url='/1a1b06b230af4efdbb989ea99e9841af/20760/256/%(zoom)d/%(row)d/%(col)d.png')
 
     color_range = DataRange1D(color_ds, low_setting=0) #, high_setting=max_pop)
-    
+
     choro = ChoroplethPlot(
               index = index_ds,
               value = value_ds,
@@ -68,14 +67,14 @@ def _create_plot_component(max_pop, index_ds, value_ds, color_ds, paths):
         axis = PlotAxis(tick_label_formatter=convert_lon,
             mapper=choro.index_mapper, component=container, orientation=dir)
         container.overlays.append(axis)
-    
+
     choro.tools.append(PanTool(choro))
     choro.tools.append(ZoomTool(choro))
 
     colorbar = create_colorbar(choro)
     colorbar.padding_top = container.padding_top
     colorbar.padding_bottom = container.padding_bottom
-    
+
     plt = HPlotContainer(use_backbuffer = True)
     plt.add(container)
     plt.add(colorbar)
@@ -93,7 +92,7 @@ def convert_lat(lat):
 class Demo(HasTraits):
 
     title = Str
-    
+
     data_columns = List
     column = Str
 
@@ -108,7 +107,7 @@ class Demo(HasTraits):
 
     def _plot_default(self):
         high = max(self.dataframe[self.dataframe.columns[1]])
-        return _create_plot_component(high, self.index_ds, 
+        return _create_plot_component(high, self.index_ds,
                 self.value_ds, self.color_ds, self.paths)
 
     def _column_changed(self, new):
@@ -122,10 +121,11 @@ class Demo(HasTraits):
 
     def _data_columns_default(self):
         return list(self.dataframe.columns[1:][::-1])
-   
+
 
 if __name__ == "__main__":
-    populations = pandas.read_csv('state_populations.csv')
+    population_filepath = pth.join(HERE, "..", "data", 'state_populations.csv')
+    populations = pandas.read_csv(population_filepath)
 
     from mapping.enable.geojson_overlay import process_raw
     polys = process_raw(file("states.geojs").read().replace('\r\n',''))
@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
     with enaml.imports():
         from choropleth_view import MapView
-        
+
     view = MapView(
         model = Demo(title = "State population from 1900 to 2010",
                      index_ds = ArrayDataSource(coords[:,0]),
@@ -152,4 +152,3 @@ if __name__ == "__main__":
     )
 
     view.show()
-

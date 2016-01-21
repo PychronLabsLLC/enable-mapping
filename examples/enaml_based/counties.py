@@ -1,27 +1,26 @@
 
-import urllib2
-import geojson
-from traits.api import HasTraits, Constant, Instance, Str, Property
+import os.path as pth
+from traits.api import HasTraits, Constant, Instance
 from enable.tools.api import ViewportPanTool
 
 from mapping.enable.api import MappingCanvas, MappingViewport, MBTileManager, \
-                               GeoJSONOverlay, HTTPTileManager
+                               GeoJSONOverlay
+
+HERE = pth.dirname(__file__)
+
 
 class SingleMap(HasTraits):
 
     title = Constant("Map with GeoJSON")
-    
+
     canvas = Instance(MappingCanvas)
     viewport = Instance(MappingViewport)
 
-def main():
-    tile_layer = MBTileManager(filename = 'map.mbtiles',
-                               min_level = 2,
-                               max_level = 4)
 
-    tile_layer = HTTPTileManager(min_level=0, max_level=15,
-                              server='d.tiles.mapbox.com',
-                              url='/v3/mapbox.mapbox-simple/%(zoom)d/%(row)d/%(col)d.png')
+def main():
+    tiles_path = pth.join(HERE, "..", "data", "map.mbtiles")
+    tile_layer = MBTileManager(filename=tiles_path,
+                               min_level=2, max_level=4)
 
     canvas = MappingCanvas(tile_cache = tile_layer)
     canvas.overlays.append(GeoJSONOverlay(component=canvas,

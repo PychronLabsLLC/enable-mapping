@@ -1,8 +1,10 @@
-
+import os.path as pth
 from enable.tools.api import ViewportPanTool
-from traits.api import HasTraits, Instance, Str, List, Property, Dict
+from traits.api import HasTraits, Instance, Str
 
 from mapping.enable.api import MappingCanvas, MappingViewport, MBTileManager
+
+HERE = pth.dirname(__file__)
 
 
 class Model(HasTraits):
@@ -14,11 +16,12 @@ class Model(HasTraits):
 
 
 def main():
-    manager = MBTileManager(filename = 'map.mbtiles',
+    tiles_path = pth.join(HERE, "..", "data", "map.mbtiles")
+    tile_layer = MBTileManager(filename=tiles_path,
                               min_level = 0,
                               max_level = 3)
 
-    canvas = MappingCanvas(tile_cache = manager)
+    canvas = MappingCanvas(tile_cache=tile_layer)
 
     viewport = MappingViewport(component=canvas)
     viewport.tools.append(ViewportPanTool(viewport))
