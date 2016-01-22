@@ -22,7 +22,7 @@ class MappingCanvas(Canvas):
     tile_alpha = Range(0.0, 1.0, 1.0)
 
     bgcolor = ColorTrait("lightsteelblue")
-    
+
     # FIXME This is a hack - remove when viewport is fixed
     _zoom_level = Int(0)
 
@@ -30,11 +30,10 @@ class MappingCanvas(Canvas):
 
     def __blank_tile_default(self):
         import pkg_resources
-        import Image as pil
-        import ImageDraw
-        import ImageFont
+        from PIL import Image as PilImage
+        from PIL import ImageDraw, ImageFont
 
-        im = pil.new('RGB', (256, 256), (234, 224, 216))
+        im = PilImage.new('RGB', (256, 256), (234, 224, 216))
 
         text = 'Image not available'
         try:
@@ -64,7 +63,7 @@ class MappingCanvas(Canvas):
 
     def _draw_background(self, gc, view_bounds=None, mode="default"):
         if self.bgcolor not in ("clear", "transparent", "none"):
-            with gc: 
+            with gc:
                 gc.set_antialias(False)
                 gc.set_fill_color(self.bgcolor_)
                 gc.draw_rect(view_bounds, FILL)
@@ -106,7 +105,7 @@ class MappingCanvas(Canvas):
 
     def transformToWSG84(self, x, y):
         return self._screen_to_WGS84(x, y, self._zoom_level)
-    
+
     def _WGS84_to_screen(self, lat_deg, lon_deg, zoom):
         """
          lat = Latitude in degrees
@@ -116,7 +115,7 @@ class MappingCanvas(Canvas):
         lat_rad = math.radians(lat_deg)
         mapsize = self.tile_cache.get_tile_size() << zoom
         x = (lon_deg + 180.0) / 360.0 * mapsize
-        y = (1- (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) 
+        y = (1- (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi)
                     / 2.0) * mapsize
         return (x, y)
 
