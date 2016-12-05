@@ -91,5 +91,19 @@ class AsyncRequestQueue(Queue.LifoQueue):
         return all
 
 
-async_loader = AsyncLoader()
-async_loader.start()
+#: Global async_loader instance. Use get_global_async_loader
+#: to request this instance.
+_async_loader = None
+
+
+def get_global_async_loader():
+    """
+    Get the current global AsyncLoader instance,
+    creating and initializing it if necessary.
+    """
+    global _async_loader
+    if _async_loader is None:
+        async_loader = AsyncLoader()
+        async_loader.start()
+        _async_loader = async_loader
+    return _async_loader

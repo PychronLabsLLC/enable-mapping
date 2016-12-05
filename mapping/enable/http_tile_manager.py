@@ -2,7 +2,7 @@
 import logging
 
 # Enthought library imports
-from traits.api import Int, Str, implements, on_trait_change
+from traits.api import Int, Str, implements, on_trait_change, Instance
 from pyface.gui import GUI
 
 # Local imports
@@ -10,12 +10,15 @@ from i_tile_manager import ITileManager
 from tile_manager import TileManager
 from cacheing_decorators import lru_cache
 from asynchttp import AsyncHTTPConnection
-from async_loader import async_loader
+from async_loader import AsyncLoader, get_global_async_loader
 
 class HTTPTileManager(TileManager):
 
     implements(ITileManager)
     
+    #: The async_loader instance used to load the tiles.
+    async_loader = Instance(AsyncLoader)
+
     #### ITileManager interface ###########################################
 
     def get_tile_size(self):
@@ -31,7 +34,7 @@ class HTTPTileManager(TileManager):
     @lru_cache()
     def get_tile(self, zoom, row, col):
         # Schedule a request to get the tile
-        async_loader.put(TileRequest(self._tile_received,
+        self.async_loader.put(TileRequest(self._tile_received,
                         self.server, self.port, self.url,
                         dict(zoom=zoom, row=row, col=col)))
         # return a blank tile for now
@@ -45,6 +48,9 @@ class HTTPTileManager(TileManager):
 
     ### Private interface ##################################################
     
+    def _async_loader_default(self):
+        return get_global_async_loader()
+
     def _tile_received(self, tile_args, data):
         zoom, row, col = tile_args['zoom'], tile_args['row'], tile_args['col']
         try:
