@@ -2,7 +2,8 @@
 import asyncore
 import Queue
 import socket
-from threading import Thread
+from threading import Event, Thread
+from time import time as _time
 
 # Enthought library imports
 from traits.api import HasTraits, Any, Instance
@@ -12,33 +13,43 @@ class AsyncLoader(HasTraits):
     def start(self):
         self._thread.start()
 
+    def stop(self):
+        self._stop_signal.set()
+        self._thread.join()
+
     def put(self, request):
         self._queue.put(request)
 
     ### Private interface ##################################################
     
     _thread = Any
+    _stop_signal = Any
     _queue = Instance(Queue.Queue)
 
     def __thread_default(self):
-        return RequestingThread(self._queue)
+        return RequestingThread(self._queue, self._stop_signal)
 
     def __queue_default(self):
         return AsyncRequestQueue()
+
+    def __stop_signal_default(self):
+        return Event()
+
     
 class RequestingThread(Thread):
-    def __init__(self, queue):
+    def __init__(self, queue, stop_signal):
         super(RequestingThread, self).__init__()
         self.queue = queue
+        self.stop_signal = stop_signal
         self.daemon = True
 
     def run(self):
         # Wait for any requests
-        while True:
+        while not self.stop_signal.is_set():
             try:
                 # Block if there are no pending asyncore requests
                 block = len(asyncore.socket_map) == 0
-                reqs = self.queue.get_all(block=block)
+                reqs = self.queue.get_all(block=block, timeout=1.0)
                 for req in reqs:
                     try:
                         req.connect()
