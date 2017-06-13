@@ -15,7 +15,7 @@ from async_loader import async_loader
 class HTTPTileManager(TileManager):
 
     implements(ITileManager)
-    
+
     #### ITileManager interface ###########################################
 
     def get_tile_size(self):
@@ -44,7 +44,7 @@ class HTTPTileManager(TileManager):
     url = Str
 
     ### Private interface ##################################################
-    
+
     def _tile_received(self, tile_args, data):
         zoom, row, col = tile_args['zoom'], tile_args['row'], tile_args['col']
         try:
@@ -53,7 +53,8 @@ class HTTPTileManager(TileManager):
             self.tile_ready = (zoom, row, col)
         except Exception, e:
             # Failed to process tile
-            logging.exception("Failed to process %s%s"%(self.server, self.url%(zoom,row,col)))
+            logging.exception(
+                "Failed to process %s%s", self.server, self.url%tile_args)
 
     @on_trait_change('server, url')
     def _reset_cache(self, new):
@@ -77,11 +78,11 @@ class TileRequest(AsyncHTTPConnection):
 
     def handle_response(self):
         if self.response.status == 200:
-            GUI.invoke_later(self.handler, 
-                             self._tile_args, 
+            GUI.invoke_later(self.handler,
+                             self._tile_args,
                              self.response.body)
         self.close()
-    
+
     def __str__(self):
         return "TileRequest for %s"%str(self._tile_args)
 
