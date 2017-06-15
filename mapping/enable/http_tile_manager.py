@@ -54,7 +54,10 @@ class HTTPTileManager(TileManager):
         except Exception, e:
             # Failed to process tile
             logging.exception(
-                "Failed to process %s%s", self.server, self.url%tile_args)
+                "Failed to process %s%s",
+                self.server,
+                self.url % tile_args,
+            )
 
     @on_trait_change('server, url')
     def _reset_cache(self, new):
