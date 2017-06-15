@@ -427,7 +427,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
 
         try:
             data = self.recv (self.ac_in_buffer_size)
-        except socket.error, why:
+        except socket.error:
             self.handle_error()
             return
 
