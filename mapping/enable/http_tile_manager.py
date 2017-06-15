@@ -51,7 +51,7 @@ class HTTPTileManager(TileManager):
             data = self.process_raw(data)
             self.get_tile.replace(data, self, zoom, row, col)
             self.tile_ready = (zoom, row, col)
-        except Exception, e:
+        except Exception:
             # Failed to process tile
             logging.exception(
                 "Failed to process %s%s",
