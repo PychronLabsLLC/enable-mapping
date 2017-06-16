@@ -42,11 +42,11 @@ class RequestingThread(Thread):
                 for req in reqs:
                     try:
                         req.connect()
-                    except socket.gaierror as e:
+                    except socket.gaierror:
                         # Don't panic, the server is not available
                         pass
 
-            except Queue.Empty, e:
+            except Queue.Empty:
                 pass
             asyncore.loop()
 
