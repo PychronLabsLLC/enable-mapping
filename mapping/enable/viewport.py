@@ -48,6 +48,11 @@ class MappingViewport(Viewport):
     def _set_longitude(self, val):
         self.geoposition[1] = val 
 
+    @on_trait_change('component:bounds')
+    def _component_bounds_updated(self):
+        # override the parent trait handler
+        pass
+
     @on_trait_change('geoposition, bounds, bounds_items')
     def _update_position(self, object, name, old, new):
         # Update position
