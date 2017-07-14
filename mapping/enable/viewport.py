@@ -1,10 +1,10 @@
 
 from numpy import array
-from traits.api import Instance, Bool, Int, Property, Float, DelegatesTo, \
-                       on_trait_change
+from traits.api import (
+    Instance, Bool, CList, Int, Property, Float, DelegatesTo, NO_COMPARE
+)
 from enable.viewport import Viewport
 from enable.base import empty_rectangle, intersect_bounds
-from enable.enable_traits import coordinate_trait
 
 from canvas import MappingCanvas
 from zoom import MappingZoomTool
@@ -13,9 +13,14 @@ class MappingViewport(Viewport):
 
     component = Instance(MappingCanvas)
 
+    zoom_tool = Instance(MappingZoomTool)
     zoom_level = Int(0)
 
-    geoposition = coordinate_trait
+    # NOTE: `NO_COMPARE` is needed to make sure that the view position gets
+    # refreshed after being disabled. This is mostly a quirk in the way this
+    # component is being used in `canopy_data`.
+    geoposition = CList([0.0, 0.0], comparison_mode=NO_COMPARE)
+
     latitude = Property(Float, depends_on='geoposition')
     longitude = Property(Float, depends_on='geoposition')
 
@@ -23,20 +28,19 @@ class MappingViewport(Viewport):
     min_level = Property(lambda self: self.tile_cache.min_level)
     max_level = Property(lambda self: self.tile_cache.max_level)
 
-    zoom_tool = Instance(MappingZoomTool)
-
-    enable_zoom = Bool(True)
-    stay_inside = Bool(True)
-
     draw_cross = Bool(True)
 
     def __init__(self, **traits):
-        # Skip parent constructor
-        super(Viewport, self).__init__(**traits)
-        self._update_component_view_bounds()
         self.zoom_tool = MappingZoomTool(self)
-        if self.enable_zoom:
-            self._enable_zoom_changed(False, True)
+        super(MappingViewport, self).__init__(
+            horizontal_anchor='center',
+            vertical_anchor='center',
+            zoom_tool=self.zoom_tool,
+            stay_inside=True,
+            enable_zoom=True,
+            **traits
+        )
+        self._update_component_view_bounds()
 
     def _get_latitude(self):
         return self.geoposition[0]
@@ -48,23 +52,38 @@ class MappingViewport(Viewport):
     def _set_longitude(self, val):
         self.geoposition[1] = val 
 
-    @on_trait_change('component:bounds')
-    def _component_bounds_updated(self):
-        # override the parent trait handler
-        pass
+    def _component_bounds_updated(self, old, new):
+        super(MappingViewport, self)._component_bounds_updated(old, new)
+        # FIXME: This seems to be needed to make sure the zooming works
+        # smoothly. If removed, zooming fails after a few levels.
+        self._geoposition_changed(self.geoposition, self.geoposition)
 
-    @on_trait_change('geoposition, bounds, bounds_items')
-    def _update_position(self, object, name, old, new):
-        # Update position
+    def _bounds_changed(self, old, new):
+        super(MappingViewport, self)._bounds_changed(old, new)
+        # FIXME: This seems to be needed to make sure we re-orient the view
+        # after the a viewport resize. If removed, resizing the viewport
+        # causes the display to refresh with the displayed points at a corner
+        # or outside the viewport.
+        self._geoposition_changed(self.geoposition, self.geoposition)
+
+    def _geoposition_changed(self, old, new):
+        if self.component is None:
+            return
+        # Update view position
         lat, lon = self.geoposition
         x, y = self.component._WGS84_to_screen(lat, lon, self.zoom_level)
-        w, h = self.bounds
+        w, h = self.view_bounds
         self.view_position = [x - w/2., y - h/2.]
 
-    def _view_position_changed(self, (x, y)):
-        w, h = self.bounds
-        lat, lon = self.component._screen_to_WGS84(x+w/2., y+h/2., self.zoom_level)
-        self.trait_set(geoposition = [lat, lon])
+    def _handle_view_box_changed(self):
+        """ Handle the case when the viewport has changed.
+        """
+        x, y = self.view_position
+        w, h = self.view_bounds
+        lat, lon = self.component._screen_to_WGS84(
+            x + w/2., y + h/2., self.zoom_level
+        )
+        self.trait_set(geoposition=[lat, lon])
 
     def _draw_overlay(self, gc, view_bounds=None, mode="normal"):
         if self.draw_cross:
@@ -83,7 +102,6 @@ class MappingViewport(Viewport):
         super(MappingViewport, self)._draw_overlay(gc, view_bounds, mode)
 
     def _draw_mainlayer(self, gc, view_bounds=None, mode="normal"):
-
         # For now, ViewPort ignores the view_bounds that are passed in...
         # Long term, it should be intersected with the view_position to
         # compute a new view_bounds to pass in to our component.
