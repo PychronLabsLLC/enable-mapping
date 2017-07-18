@@ -56,6 +56,7 @@ class MappingViewport(Viewport):
         super(MappingViewport, self)._component_bounds_updated(old, new)
         # FIXME: This seems to be needed to make sure the zooming works
         # smoothly. If removed, zooming fails after a few levels.
+        # see: https://github.com/enthought/enable-mapping/issues/11
         self._geoposition_changed(self.geoposition, self.geoposition)
 
     def _bounds_changed(self, old, new):
@@ -64,6 +65,7 @@ class MappingViewport(Viewport):
         # after the a viewport resize. If removed, resizing the viewport
         # causes the display to refresh with the displayed points at a corner
         # or outside the viewport.
+        # see: https://github.com/enthought/enable-mapping/issues/11
         self._geoposition_changed(self.geoposition, self.geoposition)
 
     def _geoposition_changed(self, old, new):
