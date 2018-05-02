@@ -29,7 +29,7 @@ class HTTPTileManager(TileManager):
         size = self.get_tile_size()
         col = (x / size % n)
         row = (n - 1 - y / size % n)
-        return (zoom, col, row)
+        return (zoom, row, col)
 
     @lru_cache()
     def get_tile(self, zoom, row, col):

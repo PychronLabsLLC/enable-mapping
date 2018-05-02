@@ -28,9 +28,9 @@ class MBTileManager(TileManager):
         size = self.get_tile_size()
         col = (x / size % n)
         row = (y / size % n)
-        return (zoom, col, row)
+        return zoom, row, col
 
-    # Public interface #################################################
+    # Public interface ###################################################
 
     filename = Str()
 
