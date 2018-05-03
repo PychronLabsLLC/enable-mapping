@@ -1,6 +1,6 @@
 
-# Enthought library imports
 from traits.api import Interface
+
 
 class ITileManager(Interface):
     """

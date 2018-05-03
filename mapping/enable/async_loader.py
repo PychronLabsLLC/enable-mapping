@@ -8,8 +8,9 @@ from time import time as _time
 # Enthought library imports
 from traits.api import HasTraits, Any, Instance
 
+
 class AsyncLoader(HasTraits):
-    
+
     def start(self):
         self._thread.start()
 
@@ -20,8 +21,8 @@ class AsyncLoader(HasTraits):
     def put(self, request):
         self._queue.put(request)
 
-    ### Private interface ##################################################
-    
+    # Private interface ##################################################
+
     _thread = Any
     _stop_signal = Any
     _queue = Instance(Queue.Queue)
@@ -35,7 +36,7 @@ class AsyncLoader(HasTraits):
     def __stop_signal_default(self):
         return Event()
 
-    
+
 class RequestingThread(Thread):
     def __init__(self, queue, stop_signal):
         super(RequestingThread, self).__init__()
@@ -60,6 +61,7 @@ class RequestingThread(Thread):
             except Queue.Empty:
                 pass
             asyncore.loop()
+
 
 class AsyncRequestQueue(Queue.LifoQueue):
     def get_all(self, block=True, timeout=None):

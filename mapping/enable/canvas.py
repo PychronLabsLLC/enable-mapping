@@ -2,15 +2,13 @@
 import math
 from cStringIO import StringIO
 
-# Enthought library imports
-from traits.api import Int, Range, Instance, on_trait_change
-
+from enable.api import Canvas, ColorTrait
 from kiva.image import Image
 from kiva.constants import FILL
-from enable.api import Canvas, ColorTrait
+from traits.api import Int, Range, Instance, on_trait_change
 
-# Local imports
-from i_tile_manager import ITileManager
+from .i_tile_manager import ITileManager
+
 
 class MappingCanvas(Canvas):
     """
@@ -87,16 +85,20 @@ class MappingCanvas(Canvas):
 
             lim = tile_size << zoom
 
-            if starty < 0: starty = 0
-            if endy > lim: endy = lim
+            if starty < 0:
+                starty = 0
+            if endy > lim:
+                endy = lim
 
             gc.set_alpha(self.tile_alpha)
             for tx in range(startx, endx, tile_size):
                 for ty in range(starty, endy, tile_size):
-                    zoom, row, col = self.tile_cache.convert_to_tilenum(tx, ty, zoom)
+                    zoom, row, col = self.tile_cache.convert_to_tilenum(tx, ty,
+                                                                        zoom)
                     tile = self.tile_cache.get_tile(zoom, row, col)
-                    if not tile: tile = self._blank_tile
-                    gc.draw_image(tile, (tx,ty,tile_size+1, tile_size+1))
+                    if not tile:
+                        tile = self._blank_tile
+                    gc.draw_image(tile, (tx, ty, tile_size+1, tile_size+1))
 
         super(MappingCanvas, self)._draw_underlay(gc, view_bounds, mode)
 
@@ -115,8 +117,7 @@ class MappingCanvas(Canvas):
         lat_rad = math.radians(lat_deg)
         mapsize = self.tile_cache.get_tile_size() << zoom
         x = (lon_deg + 180.0) / 360.0 * mapsize
-        y = (1- (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi)
-                    / 2.0) * mapsize
+        y = (1- (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0) * mapsize  # noqa
         return (x, y)
 
     def _screen_to_WGS84(self, x, y, zoom):

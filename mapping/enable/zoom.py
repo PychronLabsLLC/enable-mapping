@@ -1,6 +1,6 @@
-
-from traits.api import DelegatesTo, Property
 from enable.tools.viewport_zoom_tool import ViewportZoomTool
+from traits.api import DelegatesTo, Property
+
 
 class MappingZoomTool(ViewportZoomTool):
     """Zoom tool for a map viewport.
@@ -14,12 +14,16 @@ class MappingZoomTool(ViewportZoomTool):
     max_level = Property(lambda self: self.component.max_level)
 
     def _min_zoom_default(self):
-        if self.zoom_level == self.min_level: return 1.0
-        else: return 0.5
+        if self.zoom_level == self.min_level:
+            return 1.0
+        else:
+            return 0.5
 
     def _max_zoom_default(self):
-        if self.zoom_level == self.max_level: return 1.0
-        else: return 2.0
+        if self.zoom_level == self.max_level:
+            return 1.0
+        else:
+            return 2.0
 
     def _zoom_level_changed(self, old, new):
         self.min_zoom = 0.5
@@ -67,13 +71,17 @@ class MappingZoomTool(ViewportZoomTool):
         if new_zoom < self.min_zoom:
             new_zoom = 1.0
             factor = 0.5
-            if self.zoom_level > self.min_level: self.zoom_level -= 1
-            else: return
+            if self.zoom_level > self.min_level:
+                self.zoom_level -= 1
+            else:
+                return
         elif new_zoom > self.max_zoom:
             new_zoom = 1.0
             factor = 2
-            if self.zoom_level < self.max_level: self.zoom_level += 1
-            else: return
+            if self.zoom_level < self.max_level:
+                self.zoom_level += 1
+            else:
+                return
 
         x_pos = (transformed_x - (transformed_x - position[0]) / zoom) * factor
         y_pos = (transformed_y - (transformed_y - position[1]) / zoom) * factor
@@ -82,8 +90,8 @@ class MappingZoomTool(ViewportZoomTool):
 
         bounds = self.component.view_bounds
         self.component.set(
-            view_bounds   = [bounds[0] / zoom , bounds[1] / zoom],
-            view_position = [x_pos, y_pos]
+            view_bounds=[bounds[0] / zoom, bounds[1] / zoom],
+            view_position=[x_pos, y_pos]
         )
 
         self.component.request_redraw()

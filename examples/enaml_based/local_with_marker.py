@@ -1,4 +1,5 @@
 import os.path as pth
+
 from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Constant, Str
 
@@ -26,7 +27,7 @@ def main():
     canvas = MappingCanvas(tile_cache=tile_layer)
 
     canvas.add(GeoMarker(filename='enthought-marker.png',
-                         geoposition = (40.7546423, -73.9748948)))
+                         geoposition=(40.7546423, -73.9748948)))
 
     viewport = MappingViewport(component=canvas)
     viewport.tools.append(ViewportPanTool(viewport))
@@ -38,6 +39,7 @@ def main():
         from simple_view import Map
     window = Map(model=model)
     window.show()
+
 
 if __name__ == "__main__":
     main()

@@ -1,17 +1,18 @@
 
 import os.path as pth
+
 import numpy
 import pandas
+
+from chaco.api import (ArrayPlotData, Plot, ColorBar, HPlotContainer,
+                       ColormappedSelectionOverlay, LinearMapper, OrRd)
+from chaco.tools.api import (PanTool, ZoomTool, RangeSelection,
+                             RangeSelectionOverlay)
+from enable.api import Component, ComponentEditor
 from traits.api import HasTraits, Constant, Instance
 from traitsui.api import View, UItem
 
-from enable.api import Component, ComponentEditor
 from mapping.enable.mbtile_manager import MBTileManager
-
-from chaco.api import ArrayPlotData, Plot, ColorBar, HPlotContainer, \
-                      ColormappedSelectionOverlay, LinearMapper, OrRd
-from chaco.tools.api import PanTool, ZoomTool, RangeSelection, \
-                            RangeSelectionOverlay
 from mapping.chaco.map import Map
 
 HERE = pth.dirname(__file__)
@@ -31,6 +32,7 @@ def create_colorbar(colormap):
                                                    fill_color="lightgray"))
     return colorbar
 
+
 def _create_plot_component():
     # Load state data
     states_filepath = pth.join(HERE, "..", "data", 'states.csv')
@@ -47,16 +49,16 @@ def _create_plot_component():
     lat = lat.view(numpy.ndarray)
     data = data.view(numpy.ndarray)
 
-    plot = Plot(ArrayPlotData(index = lon, value=lat, color=data))
+    plot = Plot(ArrayPlotData(index=lon, value=lat, color=data))
     renderers = plot.plot(
         ("index", "value", "color"),
-        type = "cmap_scatter",
-        name = "unfunded",
-        color_mapper = OrRd,
-        marker = "circle",
-        outline_color = 'lightgray',
-        line_width = 1.,
-        marker_size = 10,
+        type="cmap_scatter",
+        name="unfunded",
+        color_mapper=OrRd,
+        marker="circle",
+        outline_color='lightgray',
+        line_width=1.,
+        marker_size=10,
     )
 
     tiles_path = pth.join(HERE, "..", "data", "map.mbtiles")
@@ -87,7 +89,7 @@ def _create_plot_component():
     colorbar.padding_top = plot.padding_top
     colorbar.padding_bottom = plot.padding_bottom
 
-    container = HPlotContainer(use_backbuffer = True)
+    container = HPlotContainer(use_backbuffer=True)
     container.add(plot)
     container.add(colorbar)
     container.bgcolor = "lightgray"
@@ -97,12 +99,12 @@ def _create_plot_component():
 
 def convert_lon(lon):
     val = (360.*lon) - 180.
-    return ("%.0f"%val)
+    return ("%.0f" % val)
 
 
 def convert_lat(lat):
     val = numpy.degrees(numpy.arctan(numpy.sinh(numpy.pi*(1-2*(1-lat)))))
-    return ("%.0f"%val)
+    return ("%.0f" % val)
 
 
 class Demo(HasTraits):

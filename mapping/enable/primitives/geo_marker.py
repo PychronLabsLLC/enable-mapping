@@ -1,13 +1,16 @@
 
-from traits.api import Instance, Str
-from kiva.image import Image
 from enable.enable_traits import coordinate_trait
+from kiva.image import Image
+from traits.api import Instance, Str
 
-from geo_primitive import GeoPrimitive
+from .geo_primitive import GeoPrimitive
+
 
 class GeoMarker(GeoPrimitive):
 
-    #### 'GeoPrimitive' interface ###################################################
+    ###########################################################################
+    # 'GeoPrimitive' interface
+    ###########################################################################
 
     bounds = (1, 1)
 

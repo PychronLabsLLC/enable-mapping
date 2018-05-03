@@ -1,8 +1,8 @@
 
-# Enthought library imports
 from traits.api import HasTraits, implements, Event, Int, Callable
 
-from i_tile_manager import ITileManager
+from .i_tile_manager import ITileManager
+
 
 class TileManager(HasTraits):
     """
@@ -10,10 +10,10 @@ class TileManager(HasTraits):
     """
 
     implements(ITileManager)
-    
+
     min_level = Int(0)
     max_level = Int(17)
-    
+
     tile_ready = Event
 
     process_raw = Callable
