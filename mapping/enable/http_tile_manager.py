@@ -1,5 +1,8 @@
+from __future__ import print_function
 
 import logging
+
+import requests
 
 from traits.api import Int, Str, on_trait_change, Instance, provides
 from pyface.gui import GUI
@@ -7,8 +10,7 @@ from pyface.gui import GUI
 from .i_tile_manager import ITileManager
 from .tile_manager import TileManager
 from .cacheing_decorators import lru_cache
-from .asynchttp import AsyncHTTPConnection
-from .async_loader import AsyncLoader, get_global_async_loader
+from .async_loader import AsyncLoader, AsyncRequest, get_global_async_loader
 
 
 @provides(ITileManager)
@@ -70,26 +72,21 @@ class HTTPTileManager(TileManager):
         self.tile_ready = 0, 0, 0
 
 
-class TileRequest(AsyncHTTPConnection):
+class TileRequest(AsyncRequest):
     def __init__(self, handler, host, port, url, tile_args):
-        AsyncHTTPConnection.__init__(self, host, port)
         self.handler = handler
+        self._host = host
         self._url = url
         self._tile_args = tile_args
-        # self.set_debuglevel(1)
 
-    def handle_connect(self):
-        AsyncHTTPConnection.handle_connect(self)
-        self.putrequest("GET", self._url % self._tile_args)
-        self.endheaders()
-        self.getresponse()
-
-    def handle_response(self):
-        if self.response.status == 200:
-            GUI.invoke_later(self.handler,
-                             self._tile_args,
-                             self.response.body)
-        self.close()
+    def execute(self):
+        url = 'http://' + self._host + self._url % self._tile_args
+        try:
+            r = requests.get(url)
+            if r.status_code == 200:
+                GUI.invoke_later(self.handler, self._tile_args, r.content)
+        except requests.exceptions.RequestException as ex:
+            print("Exception in request '{}': {}".format(self, ex))
 
     def __str__(self):
         return "TileRequest for %s" % str(self._tile_args)
