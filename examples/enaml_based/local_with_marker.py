@@ -1,5 +1,8 @@
 import os.path as pth
 
+import enaml
+from enaml.qt.qt_application import QtApplication
+
 from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Constant, Str
 
@@ -26,7 +29,8 @@ def main():
 
     canvas = MappingCanvas(tile_cache=tile_layer)
 
-    canvas.add(GeoMarker(filename='enthought-marker.png',
+    marker_path = pth.join(HERE, 'enthought-marker.png')
+    canvas.add(GeoMarker(filename=marker_path,
                          geoposition=(40.7546423, -73.9748948)))
 
     viewport = MappingViewport(component=canvas)
@@ -34,11 +38,13 @@ def main():
 
     model = Model(canvas=canvas, viewport=viewport)
 
-    import enaml
     with enaml.imports():
         from simple_view import Map
+
+    app = QtApplication()
     window = Map(model=model)
     window.show()
+    app.start()
 
 
 if __name__ == "__main__":

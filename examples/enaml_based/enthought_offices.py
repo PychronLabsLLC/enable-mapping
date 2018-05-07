@@ -1,9 +1,15 @@
+import os.path as op
+
+import enaml
+from enaml.qt.qt_application import QtApplication
 
 from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Str, List, Tuple, Float
 
 from mapping.enable.api import MappingCanvas, MappingViewport, HTTPTileManager
 from mapping.enable.primitives.api import GeoMarker
+
+HERE = op.dirname(__file__)
 
 
 class Office(HasTraits):
@@ -41,9 +47,10 @@ class MultiMap(HasTraits):
     def _offices_changed(self, new):
         viewports = []
         canvas = self.canvas
+        marker_path = op.join(HERE, 'enthought-marker.png')
         for office in new:
             canvas.add(GeoMarker(geoposition=office.location,
-                                 filename='enthought-marker.png'))
+                                 filename=marker_path))
 
             viewport = MappingViewport(component=canvas)
             viewport.tools.append(ViewportPanTool(viewport))
@@ -55,8 +62,8 @@ class MultiMap(HasTraits):
 
 def main():
     manager = HTTPTileManager(min_level=0, max_level=15,
-                              server='d.tiles.mapbox.com',
-                              url='/v3/mapbox.mapbox-streets/%(zoom)d/%(row)d/%(col)d.png')  # noqa
+                              server='tile.openstreetmap.org',
+                              url='/%(zoom)d/%(row)d/%(col)d.png')
     canvas = MappingCanvas(tile_cache=manager)
 
     nyc = Office(city="New York City", location=(40.7546423, -73.9748948))
@@ -66,11 +73,13 @@ def main():
 
     model = MultiMap(canvas=canvas, offices=[nyc, austin, cambridge, mumbai])
 
-    import enaml
     with enaml.imports():
         from office_view import Main
+
+    app = QtApplication()
     window = Main(model=model)
     window.show()
+    app.start()
 
 
 if __name__ == "__main__":

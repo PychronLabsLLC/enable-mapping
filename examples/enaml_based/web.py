@@ -1,3 +1,5 @@
+import enaml
+from enaml.qt.qt_application import QtApplication
 
 from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Str, Dict
@@ -38,9 +40,6 @@ class WebModel(HasTraits):
         server, url = self.servers[new]
         self.canvas.tile_cache.trait_set(server=server, url=url)
 
-    def _server_default(self):
-        return self.servers.keys()[0]
-
     def _servers_default(self):
         return SERVERS
 
@@ -64,13 +63,15 @@ def main():
     viewport.set(zoom_level=12, geoposition=nyc)
 
     model = SingleMap(canvas=canvas, viewport=viewport)
-    model.server = 'MapBox Simple'
+    model.server = 'OpenStreetMap'
 
-    import enaml
     with enaml.imports():
         from webmap_view import Main
+
+    app = QtApplication()
     window = Main(model=model)
     window.show()
+    app.start()
 
 
 if __name__ == "__main__":

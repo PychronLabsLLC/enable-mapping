@@ -1,21 +1,24 @@
+from enaml.widgets.api import (
+    ComboBox, Container, Field, Form, Label, MainWindow)
+from traits_enaml.widgets.enable_canvas import EnableCanvas
+
 
 enamldef Main(MainWindow):
     attr model
     title << model.title if hasattr(model, 'title') else "Mapping Demo"
     Container:
-        Form:
-            id: info
+        Form: info:
             Label:
                 text = 'Tile server'
             ComboBox:
-                value := model.server
+                index << self.items.index(model.server)
+                selected_item >> model.server
                 items << sorted(model.servers.keys())
             Label:
                 text = 'Coordinates (Latitude, Longitude)'
             Field:
                 read_only = True
-                value << str(model.viewport.geoposition)
-        EnableCanvas:
-            id: map
+                text << str(model.viewport.geoposition)
+        EnableCanvas: map:
             constraints = [width >= 600, height >= 400]
             component << model.viewport
