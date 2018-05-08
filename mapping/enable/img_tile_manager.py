@@ -1,11 +1,9 @@
 from __future__ import division
 
-from io import BytesIO
 import os
 import os.path as op
 
 import numpy as np
-from PIL import Image
 
 from traits.api import String, Tuple, provides
 
@@ -33,12 +31,7 @@ class ImageTileManager(TileManager):
         tile_path = op.join(zoom_dir, '{}.{}.npy'.format(row, col))
         if not op.exists(tile_path):
             return None
-
-        tile = np.load(tile_path)
-        img = Image.fromarray(tile, mode='RGB')
-        data = BytesIO()
-        img.save(data, format='png')
-        return self.process_raw(data.getvalue())
+        return self.process_raw(np.load(tile_path))
 
     def get_tile_size(self):
         return 256

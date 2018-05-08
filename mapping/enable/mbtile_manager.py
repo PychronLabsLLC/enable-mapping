@@ -1,10 +1,10 @@
-
 from traits.api import Instance, Str, provides
 
 from .i_tile_manager import ITileManager
 from .tile_manager import TileManager
 from .cacheing_decorators import lru_cache
 from .mbtiles import MbtileSet
+from .utils import img_data_to_img_array
 
 
 @provides(ITileManager)
@@ -18,7 +18,8 @@ class MBTileManager(TileManager):
         if not data:
             return None
         else:
-            return self.process_raw(data)
+            img = img_data_to_img_array(data)
+            return self.process_raw(img)
 
     def get_tile_size(self):
         return 256

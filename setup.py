@@ -30,7 +30,6 @@ setup(
     include_package_data=True,
     package_data={
         'mapping': ['data/*'],
-        'mapping.enable': ['fonts/*'],
     },
     install_requires=__requires__,
     license='BSD',

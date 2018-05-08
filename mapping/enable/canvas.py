@@ -1,10 +1,10 @@
-from __future__ import print_function
+from __future__ import division, print_function
 
 import math
-from io import BytesIO
 
 from enable.api import Canvas, ColorTrait
-from kiva.image import Image
+from kiva.fonttools import str_to_font
+from kiva.image import GraphicsContext
 from kiva.constants import FILL
 from traits.api import Int, Range, Instance, on_trait_change
 
@@ -25,36 +25,31 @@ class MappingCanvas(Canvas):
     # FIXME This is a hack - remove when viewport is fixed
     _zoom_level = Int(0)
 
-    _blank_tile = Instance(Image)
+    _blank_tile = Instance(GraphicsContext)
 
     def __blank_tile_default(self):
-        import pkg_resources
-        from PIL import Image as PilImage
-        from PIL import ImageDraw, ImageFont
-
-        im = PilImage.new('RGB', (256, 256), (234, 224, 216))
+        gc = GraphicsContext((256, 256), pix_format='rgba32')
+        font = str_to_font('swiss 18')
+        gc.clear((0.9, 0.875, 0.85, 1.0))
 
         text = 'Image not available'
-        try:
-            font_file = pkg_resources.resource_filename(
-                'mapping.enable', 'fonts/Verdana.ttf'
-            )
-            font = ImageFont.truetype(font_file, 18)
-        except IOError:
-            font = ImageFont.load_default()
-        size = font.getsize(text)
-        pos = (256-size[0])//2, (256-size[1])//2
+        with gc:
+            gc.set_font(font)
+            gc.set_stroke_color((0.75, 0.75, 0.75, 1.0))
 
-        draw = ImageDraw.Draw(im)
-        draw.text(pos, text, fill=(200, 200, 200), font=font)
-        del draw
-
-        tile = BytesIO()
-        im.save(tile, format='png')
-        return Image(BytesIO(tile.getvalue()))
+            width, height, _, _ = gc.get_full_text_extent(text)
+            pos = (256 - width) // 2, (256 - height) // 2
+            gc.translate_ctm(*pos)
+            gc.show_text(text)
+        return gc
 
     def _tile_cache_changed(self, new):
-        new.process_raw = lambda d: Image(BytesIO(d))
+        fmt_map = {3: 'rgb24', 4: 'rgba32'}
+
+        def process(data):
+            return GraphicsContext(data, pix_format=fmt_map[data.shape[2]],
+                                   interpolation='nearest', bottom_up=True)
+        new.process_raw = process
 
     @on_trait_change('tile_cache:tile_ready')
     def _tile_ready(self, zoom_row_col):

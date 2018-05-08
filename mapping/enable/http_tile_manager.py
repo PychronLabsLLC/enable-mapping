@@ -11,6 +11,7 @@ from .i_tile_manager import ITileManager
 from .tile_manager import TileManager
 from .cacheing_decorators import lru_cache
 from .async_loader import AsyncLoader, AsyncRequest, get_global_async_loader
+from .utils import img_data_to_img_array
 
 
 @provides(ITileManager)
@@ -54,8 +55,9 @@ class HTTPTileManager(TileManager):
     def _tile_received(self, tile_args, data):
         zoom, row, col = tile_args['zoom'], tile_args['row'], tile_args['col']
         try:
-            data = self.process_raw(data)
-            self.get_tile.replace(data, self, zoom, row, col)
+            img = img_data_to_img_array(data)
+            img = self.process_raw(img)
+            self.get_tile.replace(img, self, zoom, row, col)
             self.tile_ready = (zoom, row, col)
         except Exception:
             # Failed to process tile
