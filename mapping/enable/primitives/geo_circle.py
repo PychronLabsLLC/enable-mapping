@@ -1,12 +1,16 @@
 
 import math
+
 from traits.api import Float
 
-from geo_primitive import GeoPrimitive
+from .geo_primitive import GeoPrimitive
+
 
 class GeoCircle(GeoPrimitive):
 
-    #### 'Circle' interface ###################################################
+    ###########################################################################
+    # 'Circle' interface
+    ###########################################################################
 
     # The radius of the circle.
     radius = Float
@@ -20,7 +24,7 @@ class GeoCircle(GeoPrimitive):
 
         w, h = self.bounds
 
-        radius = min(w, h) / 2.0 
+        self.radius = min(w, h) / 2.0
 
         return
 
@@ -28,7 +32,7 @@ class GeoCircle(GeoPrimitive):
     # 'Component' interface.
     ###########################################################################
 
-    def is_in(self, x, y): 
+    def is_in(self, x, y):
         """ Return True if a point is considered to be 'in' the component. """
 
         return self._distance_between(self.center, (x, y)) <= self.radius
@@ -41,7 +45,8 @@ class GeoCircle(GeoPrimitive):
         gc.set_fill_color(self._get_fill_color(self.event_state))
 
         x, y = self.position
-        gc.arc(x + self.radius, y + self.radius, self.radius, 0, 2*math.pi, False)
+        gc.arc(x + self.radius, y + self.radius, self.radius, 0, 2*math.pi,
+               False)
         gc.fill_path()
 
         # Draw the shape's text.

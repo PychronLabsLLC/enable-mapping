@@ -1,19 +1,19 @@
 
-from numpy import array, transpose, zeros, concatenate, newaxis, invert, isnan, empty
-from traits.api import Instance, List, DelegatesTo, Array
-from chaco.api import ColormappedScatterPlot, render_markers
-from enable.api import MarkerNameDict, CustomMarker, AbstractMarker
+from numpy import array, transpose, zeros, concatenate, newaxis, invert, isnan
+
+from chaco.api import ColormappedScatterPlot
 from enable.compiled_path import CompiledPath
 from kiva.constants import FILL_STROKE
+from traits.api import Instance, List, DelegatesTo, Array
 
-from mapping.enable.i_tile_manager import ITileManager
 from mapping.chaco.map import Map
+
 
 class ChoroplethPlot(ColormappedScatterPlot):
 
     tile_cache = DelegatesTo("_map_overlay")
     zoom_level = DelegatesTo("_map_overlay")
-    
+
     compiled_paths = List(CompiledPath)
 
     _map_overlay = Instance(Map, ())
@@ -31,14 +31,15 @@ class ChoroplethPlot(ColormappedScatterPlot):
             pass
         else:
             # maps screen points
-            colors = self._cached_data_pts[:,2]
+            colors = self._cached_data_pts[:, 2]
             screen_pts = self.map_screen(self._cached_data_pts)
-            pts = concatenate((screen_pts, colors[:,newaxis]), axis=1)
+            pts = concatenate((screen_pts, colors[:, newaxis]), axis=1)
             self._render(gc, (pts, self._cached_paths))
 
     def _gather_points(self):
-        """ 
-        Collects the data points that are within the plot bounds and caches them
+        """
+        Collects the data points that are within the plot bounds and caches
+        them
 
         TODO: account for bounding boxes of polygon paths
         """
@@ -62,8 +63,8 @@ class ChoroplethPlot(ColormappedScatterPlot):
         index_range_mask = self.index_mapper.range.mask_data(index)
         value_range_mask = self.value_mapper.range.mask_data(value)
         nan_mask = invert(isnan(index_mask)) & invert(isnan(value_mask))
-        point_mask = index_mask & value_mask & nan_mask & \
-                     index_range_mask & value_range_mask
+        point_mask = (index_mask & value_mask & nan_mask &
+                      index_range_mask & value_range_mask)
 
         if self.color_data is not None:
             if self.color_data.is_masked():
@@ -72,11 +73,11 @@ class ChoroplethPlot(ColormappedScatterPlot):
             else:
                 color_data = self.color_data.get_data()
 
-            #color_nan_mask = isreal(color_data)
+            # color_nan_mask = isreal(color_data)
             color_nan_mask = invert(isnan(color_data))
 
             point_mask = point_mask & color_nan_mask
-            points = transpose(array((index,value,color_data)))
+            points = transpose(array((index, value, color_data)))
         else:
             points = transpose(array((index, value)))
 
@@ -101,12 +102,13 @@ class ChoroplethPlot(ColormappedScatterPlot):
         factor = self.tile_cache.get_tile_size() << self.zoom_level
 
         render_variable_markers(gc, points, paths, factor,
-                       self.color_mapper, self.fill_alpha, self.line_width, 
-                       self.outline_color_)
+                                self.color_mapper, self.fill_alpha,
+                                self.line_width, self.outline_color_)
 
         # Draw the default axes, if necessary
         self._draw_default_axes(gc)
         gc.restore_state()
+
 
 def render_variable_markers(gc, points, paths, factor, color_mapper,
                             fill_alpha, line_width, outline_color):
@@ -121,7 +123,7 @@ def render_variable_markers(gc, points, paths, factor, color_mapper,
         return
 
     xs, ys, colors = transpose(points)
-    
+
     # Map the colors
     colors = color_mapper.map_screen(colors)
     alphas = (zeros(len(colors))+fill_alpha)[:, newaxis]

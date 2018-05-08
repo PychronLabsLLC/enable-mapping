@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Asynchronous HTTP/1.1 client library
 
 This module is an attempt to combine the best features of httplib with
@@ -15,11 +14,20 @@ Senior Meat Manager
 Downright Software LLC
 http://www.dougfort.com
 """
-__author__="""
+
+import sys
+import asynchat
+import asyncore
+import socket
+import string
+import cStringIO
+import mimetools
+
+__author__ = """
 Downright Software LLC
 http://www.downright.com
 """
-__copyright__="""
+__copyright__ = """
 Copyright (c) 2001 Downright Software LLC. All Rights Reserved.
 
 Distributed and Licensed under the provisions of the Python Open Source License
@@ -27,57 +35,59 @@ Agreement which is included by reference. (See 'Front Matter' in the latest
 Python documentation)
 
 WARRANTIES
-YOU UNDERSTAND AND AGREE THAT: 
+YOU UNDERSTAND AND AGREE THAT:
 
-a. YOUR USE OF THE PACKAGE IS AT YOUR SOLE RISK.  THE PACKAGE IS PROVIDED ON 
-AN 'AS IS' AND 'AS AVAILABLE' BASIS.  DOWNRIGHT EXPRESSLY DISCLAIMS ALL 
+a. YOUR USE OF THE PACKAGE IS AT YOUR SOLE RISK.  THE PACKAGE IS PROVIDED ON
+AN 'AS IS' AND 'AS AVAILABLE' BASIS.  DOWNRIGHT EXPRESSLY DISCLAIMS ALL
 WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED
 TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
 AND NON-INFRINGEMENT.
 
-b. DOWNRIGHT MAKES NO WARRANTY THAT (1) THE PACKAGE WILL MEET YOUR 
-REQUIREMENTS, (2) THE PACKAGE WILL BE UNINTERRUPTED, TIMELY, SECURE, OR 
-ERROR-FREE, (3) THE RESULTS THAT MAY BE OBTAINED FROM THE USE OF THE PACKAGE 
-WILL BE ACCURATE OR RELIABLE, (4) THE OTHER MATERIAL PURCHASED OR OBTAINED BY 
-YOU THROUGH THE PACKAGE WILL MEET YOUR EXPECTATIONS,, AND (5) ANY ERRORS IN 
+b. DOWNRIGHT MAKES NO WARRANTY THAT (1) THE PACKAGE WILL MEET YOUR
+REQUIREMENTS, (2) THE PACKAGE WILL BE UNINTERRUPTED, TIMELY, SECURE, OR
+ERROR-FREE, (3) THE RESULTS THAT MAY BE OBTAINED FROM THE USE OF THE PACKAGE
+WILL BE ACCURATE OR RELIABLE, (4) THE OTHER MATERIAL PURCHASED OR OBTAINED BY
+YOU THROUGH THE PACKAGE WILL MEET YOUR EXPECTATIONS,, AND (5) ANY ERRORS IN
 THE PACKAGE WILL BE CORRECTED.
 
-c. ANY MATERIALS DOWNLOADED OR OTHERWISE OBTAINED THROUGH THE USE OF THE 
-PACKAGE IS DONE AT YOUR OWN DISCRETION AND RISK AND THAT YOU WILL BE SOLELY 
-RESPONSIBLE FOR ANY DAMAGE TO YOUR COMPUTER SYSTEM OR LOSS OF DATA THAT 
+c. ANY MATERIALS DOWNLOADED OR OTHERWISE OBTAINED THROUGH THE USE OF THE
+PACKAGE IS DONE AT YOUR OWN DISCRETION AND RISK AND THAT YOU WILL BE SOLELY
+RESPONSIBLE FOR ANY DAMAGE TO YOUR COMPUTER SYSTEM OR LOSS OF DATA THAT
 RESULTS FROM THE DOWNLOAD OF ANY SUCH MATERIAL.
 
-d. NO ADVICE OR INFORMATION, WHETHER ORAL OR WRITTEN, OBTAINED BY YOU FROM 
-DOWNRIGHT OR THROUGH OR FROM THE PACKAGE SHALL CREATE ANY WARRANTY NOT 
+d. NO ADVICE OR INFORMATION, WHETHER ORAL OR WRITTEN, OBTAINED BY YOU FROM
+DOWNRIGHT OR THROUGH OR FROM THE PACKAGE SHALL CREATE ANY WARRANTY NOT
 EXPRESSLY STATED IN THE TOS.
 
 LIMITATION OF LIABILITY
-YOU EXPRESSLY UNDERSTAND AND AGREE THAT DOWNRIGHT SHALL NOT BE LIABLE FOR ANY 
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR EXEMPLARY DAMAGES, 
-INCLUDING BUT NOT LIMITED TO, DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, 
-DATA OR OTHER INTANGIBLE LOSSES (EVEN IF DOWNRIGHT HAS BEEN ADVISED OF SUCH 
-DAMAGES), RESULTING FROM: 
-(1) THE USE OR THE INABILITY TO USE THE PACKAGE; 
-(2) THE COST OF PROCUREMENT OF SUBSTITUTE GOODS AND SERVICES RESULTING FROM 
-ANY GOODS, DATA, INFORMATION OR SERVICES PURCHASED OR OBTAINED OR MESSAGES 
-RECEIVED OR TRANSACTIONS ENTERED INTO THROUGH OR FROM THE PACKAGE; 
-(3) UNAUTHORIZED ACCESS TO OR ALTERATION OF YOUR TRANSMISSIONS OR DATA; 
-(4) STATEMENTS OF CONDUCT OF ANY THIRD PARTY ON THE PACKAGE; OR 
+YOU EXPRESSLY UNDERSTAND AND AGREE THAT DOWNRIGHT SHALL NOT BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR EXEMPLARY DAMAGES,
+INCLUDING BUT NOT LIMITED TO, DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE,
+DATA OR OTHER INTANGIBLE LOSSES (EVEN IF DOWNRIGHT HAS BEEN ADVISED OF SUCH
+DAMAGES), RESULTING FROM:
+(1) THE USE OR THE INABILITY TO USE THE PACKAGE;
+(2) THE COST OF PROCUREMENT OF SUBSTITUTE GOODS AND SERVICES RESULTING FROM
+ANY GOODS, DATA, INFORMATION OR SERVICES PURCHASED OR OBTAINED OR MESSAGES
+RECEIVED OR TRANSACTIONS ENTERED INTO THROUGH OR FROM THE PACKAGE;
+(3) UNAUTHORIZED ACCESS TO OR ALTERATION OF YOUR TRANSMISSIONS OR DATA;
+(4) STATEMENTS OF CONDUCT OF ANY THIRD PARTY ON THE PACKAGE; OR
 (5) ANY OTHER MATTER RELATING TO THE PACKAGE.
 """
-__version__="0.20"
+__version__ = "0.20"
 
-import sys
-import asynchat
-import asyncore
-import socket
-import time
-import string
-import cStringIO
-import mimetools
 
 HTTP_PORT = 80
 HTTPS_PORT = 443
+_CHUNK_REQUEST_SIZE = 8192
+
+_STATE_IDLE = "asynchttp._STATE_IDLE"
+_STATE_CONNECTING = "asynchttp._STATE_CONNECTING"
+_STATE_ACTIVE = "asynchttp._STATE_ACTIVE"
+_STATE_ACCEPTING_HEADERS = "asynchttp._STATE_ACCEPTING_HEADERS"
+_STATE_REQUESTING_BODY = "asynchttp._STATE_REQUESTING_BODY"
+_STATE_CHUNK_START = "asynchttp._STATE_CHUNK_START"
+_STATE_CHUNK_BODY = "asynchttp._STATE_CHUNK_BODY"
+_STATE_CHUNK_RESIDUE = "asynchttp._STATE_CHUNK_RESIDUE"
 
 
 class AsyncHTTPResponse:
@@ -98,7 +108,7 @@ class AsyncHTTPResponse:
         self._replyline = fp.readline()
         if self.debuglevel > 0:
             print "reply: %s" % (self._replyline)
-            
+
         replylist = string.split(self._replyline, None, 2)
 
         if len(replylist) == 3:
@@ -116,20 +126,20 @@ class AsyncHTTPResponse:
             self.status = int(status)
         except:
             raise BadStatusLine(self._replyline, name=str(self))
-        
+
         self.reason = string.strip(reason)
 
         if version == 'HTTP/1.0':
             self.version = 10
         elif version.startswith('HTTP/1.'):
-            self.version = 11	# use HTTP/1.1 code for HTTP/1.x where x>=1
+            self.version = 11  # use HTTP/1.1 code for HTTP/1.x where x>=1
         else:
             raise UnknownProtocol(self._replyline, name=str(self))
 
         self.msg = mimetools.Message(fp, 0)
         if self.debuglevel > 0:
             for hdr in self.msg.headers:
-                print "header: %s" %  (string.strip(hdr))
+                print "header: %s" % (string.strip(hdr))
 
         self.body = None
 
@@ -146,17 +156,7 @@ class AsyncHTTPResponse:
             raise ResponseNotReady(name=str(self))
         return self.body
 
-_CHUNK_REQUEST_SIZE = 8192
 
-_STATE_IDLE = "asynchttp._STATE_IDLE"
-_STATE_CONNECTING = "asynchttp._STATE_CONNECTING"
-_STATE_ACTIVE = "asynchttp._STATE_ACTIVE"
-_STATE_ACCEPTING_HEADERS = "asynchttp._STATE_ACCEPTING_HEADERS"
-_STATE_REQUESTING_BODY = "asynchttp._STATE_REQUESTING_BODY"
-_STATE_CHUNK_START = "asynchttp._STATE_CHUNK_START"
-_STATE_CHUNK_BODY = "asynchttp._STATE_CHUNK_BODY"
-_STATE_CHUNK_RESIDUE = "asynchttp._STATE_CHUNK_RESIDUE"
-    
 class AsyncHTTPConnection(asynchat.async_chat):
 
     _http_vsn = 11
@@ -174,14 +174,14 @@ class AsyncHTTPConnection(asynchat.async_chat):
         # overload asynchat.found_terminator with the function
         # appropriate for each state
         self._TERMINATOR_MAP = {
-            _STATE_IDLE : self._no_action,
-            _STATE_CONNECTING :  self._no_action,
-            _STATE_ACTIVE:  self._no_action,
-            _STATE_ACCEPTING_HEADERS:  self._header_data,
-            _STATE_REQUESTING_BODY : self._body_data,
-            _STATE_CHUNK_START : self._chunk_start_data,
-            _STATE_CHUNK_BODY : self._chunk_body_data,
-            _STATE_CHUNK_RESIDUE : self._chunk_residue_data
+            _STATE_IDLE: self._no_action,
+            _STATE_CONNECTING: self._no_action,
+            _STATE_ACTIVE: self._no_action,
+            _STATE_ACCEPTING_HEADERS: self._header_data,
+            _STATE_REQUESTING_BODY: self._body_data,
+            _STATE_CHUNK_START: self._chunk_start_data,
+            _STATE_CHUNK_BODY: self._chunk_body_data,
+            _STATE_CHUNK_RESIDUE: self._chunk_residue_data
             }
 
         self.__state = None
@@ -196,7 +196,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
         self._chunkfp = None
 
         self._set_hostport(host, port)
-        
+
         self._willclose = 0
 
     def _set_hostport(self, host, port):
@@ -207,7 +207,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
                 host = host[:i]
             else:
                 port = self.default_port
-                
+
         self.host = host
         self.port = port
 
@@ -223,7 +223,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         if self.debuglevel > 0:
             print "connecting: (%s, %s)" % (self.host, self.port)
-        
+
         asyncore.dispatcher.connect(self, (self.host, self.port))
 
     def close(self):
@@ -233,7 +233,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
         """
         if self.debuglevel > 0:
             print "asynchttp.close() (%s, %s)" % (self.host, self.port)
-            
+
         self.connected = 0
 
         if self.socket:
@@ -252,9 +252,9 @@ class AsyncHTTPConnection(asynchat.async_chat):
         """
         if self.debuglevel > 0:
             print "send_entity %s"
-            
+
         self._requestfp.write(str)
-        
+
     def putrequest(self, method, url):
         """Send a request to the server.
 
@@ -266,15 +266,15 @@ class AsyncHTTPConnection(asynchat.async_chat):
         """
         if self.debuglevel > 0:
             print "putrequest %s %s" % (method, url)
-            
-        if not self.__state is _STATE_ACTIVE:
+
+        if self.__state is not _STATE_ACTIVE:
             raise RequestNotReady(
                 "Invalid putrequest() %s" % (self.__state),
                 name=str(self)
                 )
 
         self._requestfp = cStringIO.StringIO()
-        
+
         if not url:
             url = '/'
         self._requestfp.write(
@@ -306,11 +306,11 @@ class AsyncHTTPConnection(asynchat.async_chat):
 
             # we can accept "chunked" Transfer-Encodings, but no others
             # NOTE: no TE header implies *only* "chunked"
-            #self.putheader('TE', 'chunked')
+            # self.putheader('TE', 'chunked')
 
             # if TE is supplied in the header, then it must appear in a
             # Connection header.
-            #self.putheader('Connection', 'TE')
+            # self.putheader('Connection', 'TE')
 
     def putheader(self, header, value):
         """
@@ -324,7 +324,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
         """
         if self.debuglevel > 0:
             print "putheader %s: %s" % (header, value)
-            
+
         self._headerdict[header] = value
 
     def endheaders(self):
@@ -335,7 +335,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
         """
         if self.debuglevel > 0:
             print "endheaders"
-            
+
         for header, value in self._headerdict.items():
             self._requestfp.write(
                 '%s: %s\r\n' % (header, value)
@@ -349,21 +349,21 @@ class AsyncHTTPConnection(asynchat.async_chat):
         """
         if self.debuglevel > 0:
             print "request"
-            
+
         self._send_request(method, url, body, headers)
 
     def _send_request(self, method, url, body, headers):
         if self.debuglevel > 0:
             print "_send_request"
-            
+
         self.putrequest(method, url)
 
         if body:
             self.putheader('Content-Length', str(len(body)))
-            
+
         for hdr, value in headers.items():
             self.putheader(hdr, value)
-            
+
         self.endheaders()
 
         if body:
@@ -376,16 +376,16 @@ class AsyncHTTPConnection(asynchat.async_chat):
         to the server.  The response will be delivered in handle_response
         """
         self.__set_state(_STATE_ACCEPTING_HEADERS)
-        
+
         self.push(self._requestfp.getvalue())
 
         self._requestfp = None
 
         # exit this state on a blank line
         self.set_terminator("\r\n\r\n")
-        
+
         self._responsefp = cStringIO.StringIO()
-        
+
     def handle_connect(self):
         """
         Notification from asyncore that we are connected
@@ -393,7 +393,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
         self.__set_state(_STATE_ACTIVE)
         if self.debuglevel > 0:
             print "connected: (%s, %s)" % (self.host, self.port)
-            
+
     def handle_close(self):
         """
         Notification from asyncore that the server has closed
@@ -405,28 +405,25 @@ class AsyncHTTPConnection(asynchat.async_chat):
             print "closed by server: (%s, %s) %s" % (
                 self.host, self.port, self.__state
                 )
-            
+
         # 2001-03-14 djf If the server closed the connection while we're
         # requesting body data, it  may just be trying to tell us that
         # we're done
-        if self.__state in [
-            _STATE_REQUESTING_BODY,
-            _STATE_CHUNK_BODY,
-            _STATE_CHUNK_RESIDUE
-            ]:
+        if self.__state in [_STATE_REQUESTING_BODY, _STATE_CHUNK_BODY,
+                            _STATE_CHUNK_RESIDUE]:
             self.found_terminator()
             return
-        
+
         asynchat.async_chat.handle_close(self)
 
         # if auto_open, attempt to reopen the connection
         if AsyncHTTPConnection.auto_open and self.host:
             self.connect()
 
-    def handle_read (self):
+    def handle_read(self):
 
         try:
-            data = self.recv (self.ac_in_buffer_size)
+            data = self.recv(self.ac_in_buffer_size)
         except socket.error:
             self.handle_error()
             return
@@ -443,17 +440,17 @@ class AsyncHTTPConnection(asynchat.async_chat):
             terminator = self.get_terminator()
             if terminator is None:
                 # no terminator, collect it all
-                self.collect_incoming_data (self.ac_in_buffer)
+                self.collect_incoming_data(self.ac_in_buffer)
                 self.ac_in_buffer = ''
-            elif type(terminator) == type(0):
+            elif isinstance(terminator, type(0)):
                 # numeric terminator
                 n = terminator
                 if lb < n:
-                    self.collect_incoming_data (self.ac_in_buffer)
+                    self.collect_incoming_data(self.ac_in_buffer)
                     self.ac_in_buffer = ''
                     self.terminator = self.terminator - lb
-                else: # give back the whole pizza
-                    self.collect_incoming_data (self.ac_in_buffer)
+                else:  # give back the whole pizza
+                    self.collect_incoming_data(self.ac_in_buffer)
                     self.ac_in_buffer = ''
                     self.terminator = 0
                     self.found_terminator()
@@ -466,29 +463,33 @@ class AsyncHTTPConnection(asynchat.async_chat):
                 # 3) end of buffer does not match any prefix:
                 #    collect data
                 terminator_len = len(terminator)
-                index = string.find (self.ac_in_buffer, terminator)
+                index = string.find(self.ac_in_buffer, terminator)
                 if index != -1:
                     # we found the terminator
                     if index > 0:
-                        # don't bother reporting the empty string (source of subtle bugs)
-                        self.collect_incoming_data (self.ac_in_buffer[:index])
-                        self.ac_in_buffer = self.ac_in_buffer[index+terminator_len:]
-                    # This does the Right Thing if the terminator is changed here.
+                        # don't bother reporting the empty string (source of
+                        # subtle bugs)
+                        self.collect_incoming_data(self.ac_in_buffer[:index])
+                        new_start = index + terminator_len
+                        self.ac_in_buffer = self.ac_in_buffer[new_start:]
+                    # This does the Right Thing if the terminator is
+                    # changed here.
                     self.found_terminator()
                 else:
                     # check for a prefix of the terminator
-                    index = asynchat.find_prefix_at_end (self.ac_in_buffer, terminator)
+                    index = asynchat.find_prefix_at_end(self.ac_in_buffer,
+                                                        terminator)
                     if index:
                         if index != lb:
                             # we found a prefix, collect up to the prefix
-                            self.collect_incoming_data (self.ac_in_buffer[:-index])
+                            incoming = self.ac_in_buffer[:-index]
+                            self.collect_incoming_data(incoming)
                             self.ac_in_buffer = self.ac_in_buffer[-index:]
                             break
                         else:
                             # no prefix, collect it all
-                            self.collect_incoming_data (self.ac_in_buffer)
+                            self.collect_incoming_data(self.ac_in_buffer)
                             self.ac_in_buffer = ''
-
 
     def handle_error(self):
         """
@@ -496,20 +497,18 @@ class AsyncHTTPConnection(asynchat.async_chat):
         """
         self.__set_state(_STATE_IDLE)
         asyncore.dispatcher.handle_error(self)
-        
+
     def collect_incoming_data(self, data):
         """
         asynchat calls this with data as it comes in
         """
         if not self._responsefp:
             raise UnexpectedData(
-                "%s '%s' '%s' '%s'" % (
-                self.__state,
-                data,
-                self.get_terminator(),
-                self.ac_in_buffer 
-                ), name=str(self))
-        
+                "%s '%s' '%s' '%s'" % (self.__state, data,
+                                       self.get_terminator(),
+                                       self.ac_in_buffer),
+                name=str(self))
+
         self._responsefp.write(data)
 
     def _no_action(self):
@@ -534,15 +533,15 @@ class AsyncHTTPConnection(asynchat.async_chat):
             self._responsefp,
             self.debuglevel
             )
-        
+
         self._willclose = string.lower(
             self.response.getheader("connection", "")
             ) == "close"
-        
+
         transferencoding = string.lower(
             self.response.getheader("transfer-encoding", "")
             )
-        
+
         # set up for getting the body
         self._responsefp = cStringIO.StringIO()
 
@@ -552,12 +551,12 @@ class AsyncHTTPConnection(asynchat.async_chat):
                 self.set_terminator("\r\n")
                 self.__set_state(_STATE_CHUNK_START)
                 return
-            
+
             raise UnknownTransferEncoding(
                 self.response.getheader("transfer-encoding", ""),
                 name=str(self)
                 )
-        
+
         contentlengthstr = self.response.getheader(
             "content-length", None
             )
@@ -591,7 +590,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
         Assume that chunkbuffer contains some text, begining with
         a line containing the chunk size in hex.
         """
-        splitlist = self._chunkbuffer.split("\r\n",1)
+        splitlist = self._chunkbuffer.split("\r\n", 1)
         if len(splitlist) == 1:
             chunkline, self._chunkbuffer = splitlist[0], ''
         else:
@@ -599,7 +598,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
 
         i = string.find(chunkline, ';')
         if i >= 0:
-            chunkline = chunkline[:i]	# strip chunk-extensions
+            chunkline = chunkline[:i]  # strip chunk-extensions
 
         chunksize = string.atoi(chunkline, 16)
         if self.debuglevel > 0:
@@ -646,10 +645,10 @@ class AsyncHTTPConnection(asynchat.async_chat):
         else:
             chunkbody = self._chunkbuffer
             self._chunkbuffer = ''
-            
+
         self._chunkfp.write(chunkbody)
 
-        #if we have some text left over, we hope it's another chunk
+        # if we have some text left over, we hope it's another chunk
         if self._chunkbuffer:
             self._chunksize = self._get_chunk_size()
             if self._chunksize == 0:
@@ -662,7 +661,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
                 # assume it's  the chunk residue (probably just
                 # '\r\n'
                 if self._chunkbuffer:
-                    self._chunkbuffer = "" # discard the residue
+                    self._chunkbuffer = ""  # discard the residue
                     self.__set_state(_STATE_ACTIVE)
 
                     # hand off the response object to the child class
@@ -689,7 +688,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
         self._responsefp = cStringIO.StringIO()
         self.set_terminator("\r\n")
         self.__set_state(_STATE_CHUNK_START)
-        
+
     def _chunk_residue_data(self):
         """
         overload asynchat.found_terminator for
@@ -698,14 +697,14 @@ class AsyncHTTPConnection(asynchat.async_chat):
         residue = string.strip(self._responsefp.getvalue())
         if self.debuglevel > 0 and residue:
             print "chunk residue '%s'" % (residue)
-            
+
         self._responsefp = None
 
         if self._willclose:
             self.close()
 
         self.__set_state(_STATE_ACTIVE)
-        
+
         # hand off the response object to the child class
         self.handle_response()
 
@@ -716,7 +715,7 @@ class AsyncHTTPConnection(asynchat.async_chat):
         raise HandleResponse(
             "Call to AsyncHTTPConnection.handle_response", name=str(self)
             )
-    
+
     def __set_state(self, next_state):
         """
         Change state be setting _found_terminator
@@ -726,44 +725,55 @@ class AsyncHTTPConnection(asynchat.async_chat):
         self.__state = next_state
         self.found_terminator = self._TERMINATOR_MAP[self.__state]
 
-    
+
 class AsyncHTTPException(Exception):
     def __init__(self, message="", name=""):
         self._message = message
         self._name = name
-        
+
     def __str__(self):
         return "%s %s" % (self._name, self._message)
-    
+
+
 class NotConnected(AsyncHTTPException):
     pass
+
 
 class UnknownProtocol(AsyncHTTPException):
     pass
 
+
 class UnknownTransferEncoding(AsyncHTTPException):
     pass
+
 
 class BadStatusLine(AsyncHTTPException):
     pass
 
+
 class ImproperConnectionState(AsyncHTTPException):
     pass
+
 
 class RequestNotReady(ImproperConnectionState):
     pass
 
+
 class ResponseNotReady(ImproperConnectionState):
     pass
+
 
 class HandleResponse(ImproperConnectionState):
     pass
 
+
 class UnexpectedData(AsyncHTTPException):
     pass
 
+
 class UnexpectedTerminator(AsyncHTTPException):
     pass
+
 
 class __test_AsyncHTTPConnection(AsyncHTTPConnection):
     def __init__(self, host, port, url):
@@ -771,16 +781,17 @@ class __test_AsyncHTTPConnection(AsyncHTTPConnection):
             self, host, port
             )
         self._url = url
-        
+
     def handle_response(self):
         self.close()
-        
+
     def handle_connect(self):
         print "__test_AsyncHTTPConnection.handle_connect"
         AsyncHTTPConnection.handle_connect(self)
         self.putrequest("GET", self._url)
         self.endheaders()
         self.getresponse()
+
 
 if __name__ == "__main__":
     """
@@ -809,11 +820,11 @@ if __name__ == "__main__":
         tester.response.status,
         tester.response.reason
         )
-        
+
     print "headers:"
     for hdr in tester.response.msg.headers:
-        print "%s" %  (string.strip(hdr))
-    
+        print "%s" % (string.strip(hdr))
+
     if tester.response.status == 200:
         print "body:"
         print tester.response.body

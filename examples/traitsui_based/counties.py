@@ -5,14 +5,14 @@ This is the TraitsUI version of the corresponding demo in the enaml_based
 example folder.
 """
 import os.path as pth
-from traits.api import HasTraits, Instance
-from traitsui.api import Item, ModelView, View
+
 from enable.api import ComponentEditor
 from enable.tools.api import ViewportPanTool
+from traits.api import HasTraits, Instance
+from traitsui.api import Item, ModelView, View
 
-from mapping.enable.api import MappingCanvas, MappingViewport, MBTileManager, \
-                               GeoJSONOverlay
-
+from mapping.enable.api import (MappingCanvas, MappingViewport, MBTileManager,
+                                GeoJSONOverlay)
 
 HERE = pth.dirname(__file__)
 

@@ -1,11 +1,6 @@
 
-from cStringIO import StringIO
+from traits.api import Instance, Str, implements
 
-# Enthought library imports
-from traits.api import HasTraits, Int, Instance, Str, implements
-from kiva.image import Image
-
-# Local imports
 from i_tile_manager import ITileManager
 from tile_manager import TileManager
 from cacheing_decorators import lru_cache
@@ -15,14 +10,16 @@ from mbtiles import MbtileSet
 class MBTileManager(TileManager):
 
     implements(ITileManager)
-    
-    #### ITileManager interface ###########################################
+
+    # ITileManager interface ###########################################
     @lru_cache()
     def get_tile(self, zoom, row, col):
         tile = self._tileset.get_tile(zoom, row, col)
         data = tile.get_png()
-        if not data: return None
-        else: return self.process_raw(data)
+        if not data:
+            return None
+        else:
+            return self.process_raw(data)
 
     def get_tile_size(self):
         return 256
@@ -33,13 +30,13 @@ class MBTileManager(TileManager):
         col = (x / size % n)
         row = (y / size % n)
         return (zoom, col, row)
-    
-    #### Public interface #################################################
+
+    # Public interface #################################################
 
     filename = Str()
-    
-    ### Private interface ##################################################
-    
+
+    # Private interface ##################################################
+
     _tileset = Instance(MbtileSet)
 
     def _filename_changed(self, new):

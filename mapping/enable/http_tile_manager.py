@@ -1,16 +1,15 @@
 
 import logging
 
-# Enthought library imports
 from traits.api import Int, Str, implements, on_trait_change, Instance
 from pyface.gui import GUI
 
-# Local imports
-from i_tile_manager import ITileManager
-from tile_manager import TileManager
-from cacheing_decorators import lru_cache
-from asynchttp import AsyncHTTPConnection
-from async_loader import AsyncLoader, get_global_async_loader
+from .i_tile_manager import ITileManager
+from .tile_manager import TileManager
+from .cacheing_decorators import lru_cache
+from .asynchttp import AsyncHTTPConnection
+from .async_loader import AsyncLoader, get_global_async_loader
+
 
 class HTTPTileManager(TileManager):
 
@@ -19,7 +18,7 @@ class HTTPTileManager(TileManager):
     #: The async_loader instance used to load the tiles.
     async_loader = Instance(AsyncLoader)
 
-    #### ITileManager interface ###########################################
+    # ITileManager interface ################################################
 
     def get_tile_size(self):
         return 256
@@ -35,18 +34,18 @@ class HTTPTileManager(TileManager):
     def get_tile(self, zoom, row, col):
         # Schedule a request to get the tile
         self.async_loader.put(TileRequest(self._tile_received,
-                        self.server, self.port, self.url,
-                        dict(zoom=zoom, row=row, col=col)))
+                                          self.server, self.port, self.url,
+                                          dict(zoom=zoom, row=row, col=col)))
         # return a blank tile for now
         return None
 
-    #### Public interface #################################################
+    # Public interface ################################################
 
     server = Str
     port = Int(80)
     url = Str
 
-    ### Private interface ##################################################
+    # Private interface ##################################################
 
     def _async_loader_default(self):
         return get_global_async_loader()
@@ -69,7 +68,8 @@ class HTTPTileManager(TileManager):
     def _reset_cache(self, new):
         self.get_tile.clear()
         # This is a hack to repaint
-        self.tile_ready = 0,0,0
+        self.tile_ready = 0, 0, 0
+
 
 class TileRequest(AsyncHTTPConnection):
     def __init__(self, handler, host, port, url, tile_args):
@@ -77,11 +77,11 @@ class TileRequest(AsyncHTTPConnection):
         self.handler = handler
         self._url = url
         self._tile_args = tile_args
-        #self.set_debuglevel(1)
+        # self.set_debuglevel(1)
 
     def handle_connect(self):
         AsyncHTTPConnection.handle_connect(self)
-        self.putrequest("GET", self._url%self._tile_args)
+        self.putrequest("GET", self._url % self._tile_args)
         self.endheaders()
         self.getresponse()
 
@@ -93,7 +93,7 @@ class TileRequest(AsyncHTTPConnection):
         self.close()
 
     def __str__(self):
-        return "TileRequest for %s"%str(self._tile_args)
+        return "TileRequest for %s" % str(self._tile_args)
 
     def __repr__(self):
         return str(self)

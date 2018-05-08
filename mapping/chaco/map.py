@@ -3,17 +3,19 @@ Implementation of map underlay layer
 """
 
 import numpy
-from traits.api import Instance, Int, Range, DelegatesTo, on_trait_change
-from chaco.api import AbstractOverlay, LinearMapper
+
+from chaco.api import AbstractOverlay
+from traits.api import Instance, Int, DelegatesTo, on_trait_change
+
 from mapping.enable.canvas import MappingCanvas
-from mapping.enable.i_tile_manager import ITileManager
+
 
 class Map(AbstractOverlay):
 
     origin = "bottom left"
 
     zoom_level = Int(0)
-    
+
     _canvas = Instance(MappingCanvas, ())
 
     xmapper = DelegatesTo("component", "index_mapper")
@@ -30,14 +32,15 @@ class Map(AbstractOverlay):
 
         (xlow, xhigh) = self.xmapper.map_data(numpy.array([xlow, xhigh]))
         (ylow, yhigh) = self.ymapper.map_data(numpy.array([ylow, yhigh]))
-        
+
         zoom = self.zoom_level
         # Don't render the map if we've zoomed out too far
-        if zoom < 0: return
+        if zoom < 0:
+            return
 
         factor = self.tile_cache.get_tile_size() << zoom
-        
-        view_bounds = (factor*xlow, factor*ylow, 
+
+        view_bounds = (factor*xlow, factor*ylow,
                        factor*(xhigh-xlow), factor*(yhigh-ylow))
 
         with gc:
@@ -74,16 +77,20 @@ class Map(AbstractOverlay):
         self.xmapper.stretch_data = False
         self.ymapper.stretch_data = False
 
-        # FIXME This is an ungly hack for zooming, since _scale is only recomputed
-        # when map_screen is called (so in the middle of the render loop)
+        # FIXME This is an ungly hack for zooming, since _scale is only
+        # recomputed when map_screen is called (so in the middle of the
+        # render loop)
         # I need to find a better way to determine zooming
         if old is not None:
-            old.x_mapper.on_trait_change(self._mapper_scale_change, "_scale", remove=True)
+            old.x_mapper.on_trait_change(self._mapper_scale_change, "_scale",
+                                         remove=True)
         if new is not None:
             new.x_mapper.on_trait_change(self._mapper_scale_change, "_scale")
-        
+
     def _mapper_scale_change(self, obj, name, old, new):
-        if old == 1: return # start condition, don't do anything
+        if old == 1:
+            # start condition, don't do anything
+            return
         self.zoom_level += int(round(numpy.log2(new/old)))
         self.invalidate()
 
@@ -93,7 +100,8 @@ class Map(AbstractOverlay):
         width, height = self.bounds
         if width > 0 and height > 0:
             total_size = float(tile_size << zoom)
-            for range, dim in zip([self.xmapper.range, self.ymapper.range], [width, height]):
+            for range, dim in zip([self.xmapper.range, self.ymapper.range],
+                                  [width, height]):
                 midp = (range.low + range.high) / 2
                 half = dim/(total_size*2)
                 range.set_bounds(midp - half, midp + half)
@@ -108,16 +116,3 @@ class Map(AbstractOverlay):
         # the first time they are set
         if old[0] == 0 and old[1] == 0:
             self._update_range()
-
-    #def _position_changed_for_component(self):
-    #    self.invalidate()
-
-    #def _position_items_changed_for_component(self):
-    #    self.invalidate()
-
-    #def _bounds_changed_for_component(self, old, new):
-    #    self.invalidate()
-
-    #def _bounds_items_changed_for_component(self):
-    #    self.invalidate()
-    
