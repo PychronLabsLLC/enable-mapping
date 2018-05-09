@@ -89,25 +89,24 @@ class ChoroplethPlot(ColormappedScatterPlot):
         self._cache_valid = True
         return
 
-    def _render(self, gc, (points, paths), icon_mode=True):
+    def _render(self, gc, points_and_paths, icon_mode=True):
         """
         This same method is used both to render the scatterplot and to
         draw just the iconified version of this plot, with the latter
         simply requiring that a few steps be skipped.
         """
+        points, paths = points_and_paths
+        with gc:
+            gc.clip_to_rect(self.x, self.y, self.width, self.height)
 
-        gc.save_state()
-        gc.clip_to_rect(self.x, self.y, self.width, self.height)
+            factor = self.tile_cache.get_tile_size() << self.zoom_level
 
-        factor = self.tile_cache.get_tile_size() << self.zoom_level
+            render_variable_markers(gc, points, paths, factor,
+                                    self.color_mapper, self.fill_alpha,
+                                    self.line_width, self.outline_color_)
 
-        render_variable_markers(gc, points, paths, factor,
-                                self.color_mapper, self.fill_alpha,
-                                self.line_width, self.outline_color_)
-
-        # Draw the default axes, if necessary
-        self._draw_default_axes(gc)
-        gc.restore_state()
+            # Draw the default axes, if necessary
+            self._draw_default_axes(gc)
 
 
 def render_variable_markers(gc, points, paths, factor, color_mapper,

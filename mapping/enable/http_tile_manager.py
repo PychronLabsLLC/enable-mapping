@@ -1,7 +1,7 @@
 
 import logging
 
-from traits.api import Int, Str, implements, on_trait_change, Instance
+from traits.api import Int, Str, on_trait_change, Instance, provides
 from pyface.gui import GUI
 
 from .i_tile_manager import ITileManager
@@ -11,9 +11,8 @@ from .asynchttp import AsyncHTTPConnection
 from .async_loader import AsyncLoader, get_global_async_loader
 
 
+@provides(ITileManager)
 class HTTPTileManager(TileManager):
-
-    implements(ITileManager)
 
     #: The async_loader instance used to load the tiles.
     async_loader = Instance(AsyncLoader)

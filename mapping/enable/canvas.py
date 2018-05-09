@@ -1,6 +1,6 @@
 
 import math
-from cStringIO import StringIO
+from io import BytesIO
 
 from enable.api import Canvas, ColorTrait
 from kiva.image import Image
@@ -48,15 +48,15 @@ class MappingCanvas(Canvas):
         draw.text(pos, text, fill=(200, 200, 200), font=font)
         del draw
 
-        tile = StringIO()
+        tile = BytesIO()
         im.save(tile, format='png')
-        return Image(StringIO(tile.getvalue()))
+        return Image(BytesIO(tile.getvalue()))
 
     def _tile_cache_changed(self, new):
-        new.process_raw = lambda d: Image(StringIO(d))
+        new.process_raw = lambda d: Image(BytesIO(d))
 
     @on_trait_change('tile_cache:tile_ready')
-    def _tile_ready(self, (zoom, row, col)):
+    def _tile_ready(self, zoom_row_col):
         self.request_redraw()
 
     def _draw_background(self, gc, view_bounds=None, mode="default"):
@@ -78,8 +78,8 @@ class MappingCanvas(Canvas):
         with gc:
             # Tile image
             tile_size = self.tile_cache.get_tile_size()
-            startx = int(x) / tile_size * tile_size
-            starty = int(y) / tile_size * tile_size
+            startx = int(x) // tile_size * tile_size
+            starty = int(y) // tile_size * tile_size
             endx = int(x+width)
             endy = int(y+height)
 

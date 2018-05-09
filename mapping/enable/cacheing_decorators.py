@@ -1,8 +1,11 @@
+from __future__ import print_function
+
 import collections
 import functools
-from itertools import ifilterfalse
 from heapq import nsmallest
 from operator import itemgetter
+
+from six.moves import filterfalse as ifilterfalse
 
 
 class Counter(dict):
@@ -131,7 +134,7 @@ def lfu_cache(maxsize=100):
                 # purge least frequently used cache entry
                 if len(cache) > maxsize:
                     for key, _ in nsmallest(maxsize // 10,
-                                            use_count.iteritems(),
+                                            use_count.items(),
                                             key=itemgetter(1)):
                         del cache[key], use_count[key]
 
@@ -154,7 +157,7 @@ if __name__ == '__main__':
     def f(x, y):
         return 3*x+y
 
-    domain = range(5)
+    domain = list(range(5))
     from random import choice
     for i in range(1000):
         r = f(choice(domain), choice(domain))

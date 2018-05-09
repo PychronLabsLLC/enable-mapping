@@ -1,15 +1,14 @@
 
-from traits.api import Instance, Str, implements
+from traits.api import Instance, Str, provides
 
-from i_tile_manager import ITileManager
-from tile_manager import TileManager
-from cacheing_decorators import lru_cache
-from mbtiles import MbtileSet
+from .i_tile_manager import ITileManager
+from .tile_manager import TileManager
+from .cacheing_decorators import lru_cache
+from .mbtiles import MbtileSet
 
 
+@provides(ITileManager)
 class MBTileManager(TileManager):
-
-    implements(ITileManager)
 
     # ITileManager interface ###########################################
     @lru_cache()

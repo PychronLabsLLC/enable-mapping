@@ -1,11 +1,11 @@
 
 import asyncore
-import Queue
 import socket
 from threading import Event, Thread
 from time import time as _time
 
-# Enthought library imports
+from six.moves import queue
+
 from traits.api import HasTraits, Any, Instance
 
 
@@ -25,7 +25,7 @@ class AsyncLoader(HasTraits):
 
     _thread = Any
     _stop_signal = Any
-    _queue = Instance(Queue.Queue)
+    _queue = Instance(queue.Queue)
 
     def __thread_default(self):
         return RequestingThread(self._queue, self._stop_signal)
@@ -58,12 +58,12 @@ class RequestingThread(Thread):
                         # Don't panic, the server is not available
                         pass
 
-            except Queue.Empty:
+            except queue.Empty:
                 pass
             asyncore.loop()
 
 
-class AsyncRequestQueue(Queue.LifoQueue):
+class AsyncRequestQueue(queue.LifoQueue):
     def get_all(self, block=True, timeout=None):
         """Remove and return all items from the queue.
 
@@ -79,7 +79,7 @@ class AsyncRequestQueue(Queue.LifoQueue):
         try:
             if not block:
                 if not self._qsize():
-                    raise Queue.Empty
+                    raise queue.Empty
             elif timeout is None:
                 while not self._qsize():
                     self.not_empty.wait()
@@ -90,7 +90,7 @@ class AsyncRequestQueue(Queue.LifoQueue):
                 while not self._qsize():
                     remaining = endtime - _time()
                     if remaining <= 0.0:
-                        raise Queue.Empty
+                        raise queue.Empty
                     self.not_empty.wait(remaining)
             items = self._get_all()
             self.not_full.notify()

@@ -1,15 +1,14 @@
 
-from traits.api import HasTraits, implements, Event, Int, Callable
+from traits.api import HasTraits, Event, Int, Callable, provides
 
 from .i_tile_manager import ITileManager
 
 
+@provides(ITileManager)
 class TileManager(HasTraits):
     """
     Base class for tile managers
     """
-
-    implements(ITileManager)
 
     min_level = Int(0)
     max_level = Int(17)

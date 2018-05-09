@@ -2,14 +2,12 @@
 from os.path import join
 from setuptools import setup, find_packages
 
-
-info = {}
-execfile(join('mapping', '__init__.py'), info)
+from mapping import __version__, __requires__
 
 
 setup(
     name='mapping',
-    version=info['__version__'],
+    version=__version__,
     author='Enthought, Inc.',
     author_email='info@enthought.com',
     maintainer='ETS Developers',
@@ -35,7 +33,7 @@ setup(
     package_data={
         'mapping.enable': ['fonts/*']
     },
-    install_requires=info['__requires__'],
+    install_requires=__requires__,
     license='BSD',
     packages=find_packages(),
     platforms=["Windows", "Linux", "Mac OS-X", "Unix", "Solaris"],

@@ -25,7 +25,8 @@ class GeoPrimitive(Shape):
         w, h = self.bounds
         return x-w/2., y-h/2.
 
-    def _set_position(self, (x, y)):
+    def _set_position(self, pos):
+        x, y = pos
         if self.container:
             lat_deg, lon_deg = self.container.transformToWGS84(x, y)
             w, h = self.bounds
