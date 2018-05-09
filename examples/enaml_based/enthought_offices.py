@@ -63,7 +63,7 @@ class MultiMap(HasTraits):
 def main():
     manager = HTTPTileManager(min_level=0, max_level=15,
                               server='tile.openstreetmap.org',
-                              url='/%(zoom)d/%(row)d/%(col)d.png')
+                              url='/%(zoom)d/%(col)d/%(row)d.png')
     canvas = MappingCanvas(tile_cache=manager)
 
     nyc = Office(city="New York City", location=(40.7546423, -73.9748948))

@@ -17,23 +17,23 @@ class MbtileSet:
         if not self.outdir:
             raise Exception("Must specify the outdir property to write_all")
         cur = self.conn.cursor()
-        stmt = 'select zoom_level, tile_column, tile_row from map'
+        stmt = 'select zoom_level, tile_row, tile_column, from map'
         for row in cur.execute(stmt):
-            z, x, y = row[:3]
-            tile = Mbtile(z, x, y, self.conn, self.origin)
+            zoom, row, col = row[:3]
+            tile = Mbtile(zoom, row, col, self.conn, self.origin)
             tile.write_png(self.outdir)
             tile.write_json(self.outdir)
 
-    def get_tile(self, z, x, y):
-        return Mbtile(z, x, y, self.conn, self.origin)
+    def get_tile(self, zoom, row, col):
+        return Mbtile(zoom, row, col, self.conn, self.origin)
 
 
 class Mbtile:
 
-    def __init__(self, z, x, y, conn, origin):
-        self.zoom = z
-        self.col = x
-        self.row = y
+    def __init__(self, zoom, row, col, conn, origin):
+        self.zoom = zoom
+        self.row = row
+        self.col = col
         self.conn = conn
         self.origin = origin
 
@@ -58,9 +58,9 @@ class Mbtile:
     def get_png(self):
         c = self.conn.cursor()
         c.execute('''select tile_data from tiles
-                      where zoom_level = %s
-                      and tile_column = %s
-                      and tile_row = %s''' % (self.zoom, self.col, self.row))
+                     where zoom_level = %s
+                     and tile_row = %s
+                     and tile_column = %s''' % (self.zoom, self.row, self.col))
         row = c.fetchone()
         if not row:
             return None
@@ -72,8 +72,8 @@ class Mbtile:
         c2 = self.conn.cursor()
         c.execute('''select grid from grids
                      where zoom_level = %s
-                     and tile_column = %s
-                     and tile_row = %s''' % (self.zoom, self.col, self.row))
+                     and tile_row = %s
+                     and tile_column = %s''' % (self.zoom, self.row, self.col))
         row = c.fetchone()
         if not row:
             return None
@@ -90,8 +90,8 @@ class Mbtile:
             JOIN grid_utfgrid ON grid_utfgrid.grid_id = map.grid_id
             JOIN grid_key ON grid_key.grid_id = map.grid_id
             JOIN keymap ON grid_key.key_name = keymap.key_name
-            WHERE zoom_level = %s AND tile_column = %s AND tile_row = %s;
-        ''' % (self.zoom, self.col, self.row)
+            WHERE zoom_level = %s AND tile_row = %s AND tile_column = %s;
+        ''' % (self.zoom, self.row, self.col)
         keys = []
         for keyrow in c2.execute(kq):
             keyname, keydata = keyrow
