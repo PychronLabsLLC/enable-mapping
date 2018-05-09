@@ -1,5 +1,3 @@
-# All rights reserved.
-from os.path import join
 from setuptools import setup, find_packages
 
 from mapping import __version__, __requires__
@@ -26,7 +24,7 @@ setup(
         Topic :: Scientific/Engineering
         Topic :: Software Development
         Topic :: Software Development :: Libraries
-        """.splitlines() if len(c.strip()) > 0], 
+        """.splitlines() if len(c.strip()) > 0],
     description='application tools',
     long_description=open('README.rst').read(),
     include_package_data=True,
@@ -35,7 +33,7 @@ setup(
     },
     install_requires=__requires__,
     license='BSD',
-    packages=find_packages(),
+    packages=find_packages(exclude=['ci']),
     platforms=["Windows", "Linux", "Mac OS-X", "Unix", "Solaris"],
     zip_safe=True,
 )
