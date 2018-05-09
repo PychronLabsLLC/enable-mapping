@@ -1,7 +1,8 @@
 import os.path as pth
 
 import enaml
-import numpy
+from enaml.qt.qt_application import QtApplication
+import numpy as np
 import pandas
 
 from chaco.api import (
@@ -92,7 +93,7 @@ def convert_lon(lon):
 
 
 def convert_lat(lat):
-    val = numpy.degrees(numpy.arctan(numpy.sinh(numpy.pi*(1-2*(1-lat)))))
+    val = np.degrees(np.arctan(np.sinh(np.pi*(1-2*(1-lat)))))
     return ("%.0f" % val)
 
 
@@ -118,10 +119,10 @@ class Demo(HasTraits):
                                       self.color_ds, self.paths)
 
     def _column_changed(self, new):
-        self.color_ds.set_data(self.dataframe[new].view(numpy.ndarray))
+        self.color_ds.set_data(np.array(self.dataframe[new]))
 
     def _color_ds_default(self):
-        return ArrayDataSource(self.dataframe[self.column].view(numpy.ndarray))
+        return ArrayDataSource(np.array(self.dataframe[self.column]))
 
     def _column_default(self):
         return self.dataframe.columns[-1]
@@ -136,14 +137,14 @@ if __name__ == "__main__":
     population_filepath = pth.join(HERE, "..", "data", 'state_populations.csv')
     populations = pandas.read_csv(population_filepath)
 
-    with open("states.geojs", 'r') as fp:
+    with open(pth.join(HERE, "states.geojs"), 'r') as fp:
         polys = process_raw(fp.read().replace('\r\n', ''))
     # generate compiled paths from polys
     paths = []
-    coords = numpy.zeros((len(polys), 2))
+    coords = np.zeros((len(polys), 2))
     for poly, coord in zip(polys, coords):
         path = CompiledPath()
-        total = numpy.sum((numpy.sum(p, axis=0) for p in poly), axis=0)
+        total = np.sum((np.sum(p, axis=0) for p in poly), axis=0)
         coord[:] = total/sum(map(len, poly))
         for p in poly:
             path.lines(p - coord)  # recenter on origin
@@ -152,6 +153,7 @@ if __name__ == "__main__":
     with enaml.imports():
         from choropleth_view import MapView
 
+    app = QtApplication()
     view = MapView(
         model=Demo(title="State population from 1900 to 2010",
                    index_ds=ArrayDataSource(coords[:, 0]),
@@ -159,5 +161,5 @@ if __name__ == "__main__":
                    paths=paths,
                    dataframe=populations),
     )
-
     view.show()
+    app.start()

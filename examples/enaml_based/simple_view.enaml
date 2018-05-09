@@ -1,3 +1,6 @@
+from enaml.widgets.api import Container, Field, Form, Label, MainWindow
+from traits_enaml.widgets.enable_canvas import EnableCanvas
+
 
 enamldef Map(MainWindow):
     attr model
@@ -8,8 +11,7 @@ enamldef Map(MainWindow):
                 text = 'Coordinates (Latitude, Longitude)'
             Field:
                 read_only = True
-                value << str(model.viewport.geoposition)
-        EnableCanvas:
-            id: map
+                text << str(model.viewport.geoposition)
+        EnableCanvas: map:
             constraints = [width >= 600, height >= 400]
             component << model.viewport
