@@ -45,9 +45,6 @@ class WebModel(HasTraits):
         server, url = self.servers[new]
         self.canvas.tile_cache.trait_set(server=server, url=url)
 
-    def _server_default(self):
-        return self.servers.keys()[0]
-
     def _servers_default(self):
         return SERVERS
 
@@ -74,9 +71,8 @@ def main():
     viewport.tools.append(ViewportPanTool(viewport))
     viewport.set(zoom_level=12, geoposition=nyc)
 
-    model = SingleMap(canvas=canvas, viewport=viewport)
-    model.server = 'MapQuest'
-
+    model = SingleMap(canvas=canvas, viewport=viewport,
+                      server='OpenStreetMap')
     model.configure_traits()
 
 
