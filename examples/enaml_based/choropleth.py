@@ -13,10 +13,10 @@ from enable.api import Component
 from enable.compiled_path import CompiledPath
 from traits.api import HasTraits, Instance, List, Str
 
-from mapping.enable.api import HTTPTileManager
+from mapping.api import HTTPTileManager
 from mapping.chaco.api import ChoroplethPlot
 
-HERE = pth.dirname(__file__)
+DATA_DIR = pth.join(pth.dirname(__file__), '..', 'data')
 
 
 def create_colorbar(plt):
@@ -134,10 +134,10 @@ class Demo(HasTraits):
 if __name__ == "__main__":
     from mapping.enable.geojson_overlay import process_raw
 
-    population_filepath = pth.join(HERE, "..", "data", 'state_populations.csv')
+    population_filepath = pth.join(DATA_DIR, 'state_populations.csv')
     populations = pandas.read_csv(population_filepath)
 
-    with open(pth.join(HERE, "states.geojs"), 'r') as fp:
+    with open(pth.join(DATA_DIR, 'states.geojs'), 'r') as fp:
         polys = process_raw(fp.read().replace('\r\n', ''))
     # generate compiled paths from polys
     paths = []

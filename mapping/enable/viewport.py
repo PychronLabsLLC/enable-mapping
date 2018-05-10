@@ -1,8 +1,8 @@
 
 from numpy import array
 
-from enable.viewport import Viewport
 from enable.base import empty_rectangle, intersect_bounds
+from enable.viewport import Viewport
 from traits.api import (
     Instance, Bool, CList, Int, Property, Float, DelegatesTo, NO_COMPARE
 )

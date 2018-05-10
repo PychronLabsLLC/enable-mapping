@@ -1,5 +1,5 @@
-from enable.primitives.shape import Shape
 from enable.enable_traits import coordinate_trait
+from enable.primitives.shape import Shape
 from traits.api import Property, Bool, property_depends_on
 
 

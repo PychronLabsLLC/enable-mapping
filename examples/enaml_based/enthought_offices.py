@@ -6,10 +6,11 @@ from enaml.qt.qt_application import QtApplication
 from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Str, List, Tuple, Float
 
-from mapping.enable.api import MappingCanvas, MappingViewport, HTTPTileManager
+from mapping.api import HTTPTileManager
+from mapping.enable.api import MappingCanvas, MappingViewport
 from mapping.enable.primitives.api import GeoMarker
 
-HERE = op.dirname(__file__)
+DATA_DIR = op.join(op.dirname(__file__), '..', 'data')
 
 
 class Office(HasTraits):
@@ -47,7 +48,7 @@ class MultiMap(HasTraits):
     def _offices_changed(self, new):
         viewports = []
         canvas = self.canvas
-        marker_path = op.join(HERE, 'enthought-marker.png')
+        marker_path = op.join(DATA_DIR, 'enthought-marker.png')
         for office in new:
             canvas.add(GeoMarker(geoposition=office.location,
                                  filename=marker_path))

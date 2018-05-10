@@ -6,11 +6,11 @@ from enaml.qt.qt_application import QtApplication
 from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Constant, Str
 
-from mapping.api import get_builtin_mbtiles_path
-from mapping.enable.api import MappingCanvas, MappingViewport, MBTileManager
+from mapping.api import get_builtin_mbtiles_path, MBTileManager
+from mapping.enable.api import MappingCanvas, MappingViewport
 from mapping.enable.primitives.api import GeoMarker
 
-HERE = pth.dirname(__file__)
+DATA_DIR = pth.join(pth.dirname(__file__), '..', 'data')
 
 
 class Model(HasTraits):
@@ -29,7 +29,7 @@ def main():
 
     canvas = MappingCanvas(tile_cache=tile_layer)
 
-    marker_path = pth.join(HERE, 'enthought-marker.png')
+    marker_path = pth.join(DATA_DIR, 'enthought-marker.png')
     canvas.add(GeoMarker(filename=marker_path,
                          geoposition=(40.7546423, -73.9748948)))
 

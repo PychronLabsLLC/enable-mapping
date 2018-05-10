@@ -9,7 +9,8 @@ from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Str, Dict
 from traitsui.api import Item, View
 
-from mapping.enable.api import MappingCanvas, MappingViewport, HTTPTileManager
+from mapping.api import HTTPTileManager
+from mapping.enable.api import MappingCanvas, MappingViewport
 from mapping.enable.primitives.api import GeoCircle
 
 SERVERS = {

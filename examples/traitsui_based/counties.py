@@ -11,11 +11,11 @@ from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance
 from traitsui.api import Item, ModelView, View
 
-from mapping.api import get_builtin_mbtiles_path
-from mapping.enable.api import (MappingCanvas, MappingViewport, MBTileManager,
-                                GeoJSONOverlay)
+from mapping.api import get_builtin_mbtiles_path, MBTileManager
+from mapping.chaco.api import GeoJSONOverlay
+from mapping.enable.api import MappingCanvas, MappingViewport
 
-HERE = pth.dirname(__file__)
+DATA_DIR = pth.join(pth.dirname(__file__), '..', 'data')
 
 
 class SingleMap(HasTraits):
@@ -38,9 +38,10 @@ def main():
     tile_layer = MBTileManager(filename=get_builtin_mbtiles_path(),
                                min_level=2, max_level=4)
 
+    counties_path = pth.join(DATA_DIR, 'counties.geojs')
     canvas = MappingCanvas(tile_cache=tile_layer)
     canvas.overlays.append(GeoJSONOverlay(component=canvas,
-                                          geojs_filename='counties.geojs'))
+                                          geojs_filename=counties_path))
 
     viewport = MappingViewport(component=canvas, zoom_level=2,
                                geoposition=(37.09024, -95.712891))

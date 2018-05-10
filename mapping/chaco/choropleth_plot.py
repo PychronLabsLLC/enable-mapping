@@ -6,7 +6,7 @@ from enable.compiled_path import CompiledPath
 from kiva.constants import FILL_STROKE
 from traits.api import Instance, List, DelegatesTo, Array
 
-from mapping.chaco.map import Map
+from .map import Map
 
 
 class ChoroplethPlot(ColormappedScatterPlot):

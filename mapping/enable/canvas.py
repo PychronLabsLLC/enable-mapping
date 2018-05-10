@@ -1,14 +1,14 @@
 from __future__ import print_function
 
-import math
 from io import BytesIO
+import math
 
 from enable.api import Canvas, ColorTrait
-from kiva.image import Image
 from kiva.constants import FILL
+from kiva.image import Image
 from traits.api import Int, Range, Instance, on_trait_change
 
-from .i_tile_manager import ITileManager
+from mapping.i_tile_manager import ITileManager
 
 
 class MappingCanvas(Canvas):

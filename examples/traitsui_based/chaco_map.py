@@ -12,11 +12,10 @@ from enable.api import Component, ComponentEditor
 from traits.api import HasTraits, Constant, Instance
 from traitsui.api import View, UItem
 
-from mapping.api import get_builtin_mbtiles_path
-from mapping.enable.mbtile_manager import MBTileManager
-from mapping.chaco.map import Map
+from mapping.api import get_builtin_mbtiles_path, MBTileManager
+from mapping.chaco.api import Map
 
-HERE = pth.dirname(__file__)
+DATA_DIR = pth.join(pth.dirname(__file__), '..', 'data')
 
 
 def create_colorbar(colormap):
@@ -36,14 +35,14 @@ def create_colorbar(colormap):
 
 def _create_plot_component():
     # Load state data
-    states_filepath = pth.join(HERE, "..", "data", 'states.csv')
+    states_filepath = pth.join(DATA_DIR, 'states.csv')
     states = pandas.read_csv(states_filepath)
     lon = (states['longitude'] + 180.) / 360.
     lat = numpy.radians(states['latitude'])
     lat = (1 - (1. - numpy.log(numpy.tan(lat) +
                                (1./numpy.cos(lat)))/numpy.pi)/2.0)
 
-    population_filepath = pth.join(HERE, "..", "data", 'state_populations.csv')
+    population_filepath = pth.join(DATA_DIR, 'state_populations.csv')
     populations = pandas.read_csv(population_filepath)
     data = populations['2010']
     lon = lon.view(numpy.ndarray)

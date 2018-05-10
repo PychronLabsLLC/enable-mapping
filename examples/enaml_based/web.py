@@ -4,7 +4,8 @@ from enaml.qt.qt_application import QtApplication
 from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Str, Dict
 
-from mapping.enable.api import MappingCanvas, MappingViewport, HTTPTileManager
+from mapping.api import HTTPTileManager
+from mapping.enable.api import MappingCanvas, MappingViewport
 from mapping.enable.primitives.api import GeoCircle
 
 SERVERS = {

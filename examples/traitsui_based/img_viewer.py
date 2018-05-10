@@ -5,9 +5,8 @@ from chaco.api import (
     add_default_axes, add_default_grids)
 from chaco.tools.api import PanTool, ZoomTool
 
-from mapping.chaco.map import Map
-from mapping.chaco.null_renderer import NullPlotRenderer
-from mapping.enable.img_tile_manager import ImageTileManager
+from mapping.api import ImageTileManager
+from mapping.chaco.api import Map, NullPlotRenderer
 
 
 def build_formatter(maxval, flip=False):

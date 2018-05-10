@@ -36,5 +36,5 @@ setup(
     license='BSD',
     packages=find_packages(exclude=['ci']),
     platforms=["Windows", "Linux", "Mac OS-X", "Unix", "Solaris"],
-    zip_safe=False,  # We have data files, and use __file__!
+    zip_safe=True,
 )

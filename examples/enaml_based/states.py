@@ -7,11 +7,11 @@ from enaml.qt.qt_application import QtApplication
 from traits.api import HasTraits, Constant, Instance
 from enable.tools.api import ViewportPanTool
 
-from mapping.api import get_builtin_mbtiles_path
-from mapping.enable.api import (MappingCanvas, MappingViewport, MBTileManager,
-                                GeoJSONOverlay)
+from mapping.api import get_builtin_mbtiles_path, MBTileManager
+from mapping.chaco.api import GeoJSONOverlay
+from mapping.enable.api import MappingCanvas, MappingViewport
 
-HERE = pth.dirname(__file__)
+DATA_DIR = pth.join(pth.dirname(__file__), '..', 'data')
 
 
 class SingleMap(HasTraits):
@@ -27,7 +27,7 @@ def main():
                                min_level=2, max_level=4)
 
     canvas = MappingCanvas(tile_cache=tile_layer)
-    states_path = pth.join(HERE, 'states.geojs')
+    states_path = pth.join(DATA_DIR, 'states.geojs')
     canvas.overlays.append(GeoJSONOverlay(component=canvas,
                                           geojs_filename=states_path))
 

@@ -5,8 +5,8 @@ from enaml.qt.qt_application import QtApplication
 from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Str
 
-from mapping.api import get_builtin_mbtiles_path
-from mapping.enable.api import MappingCanvas, MappingViewport, MBTileManager
+from mapping.api import get_builtin_mbtiles_path, MBTileManager
+from mapping.enable.api import MappingCanvas, MappingViewport
 
 
 class Model(HasTraits):
