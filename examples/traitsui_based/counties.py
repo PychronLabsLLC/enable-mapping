@@ -11,6 +11,7 @@ from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance
 from traitsui.api import Item, ModelView, View
 
+from mapping.api import get_builtin_mbtiles_path
 from mapping.enable.api import (MappingCanvas, MappingViewport, MBTileManager,
                                 GeoJSONOverlay)
 
@@ -34,8 +35,7 @@ class SingleMapView(ModelView):
 
 
 def main():
-    tiles_path = pth.join(HERE, "..", "data", "map.mbtiles")
-    tile_layer = MBTileManager(filename=tiles_path,
+    tile_layer = MBTileManager(filename=get_builtin_mbtiles_path(),
                                min_level=2, max_level=4)
 
     canvas = MappingCanvas(tile_cache=tile_layer)

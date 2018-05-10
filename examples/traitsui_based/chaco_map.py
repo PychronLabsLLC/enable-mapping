@@ -12,6 +12,7 @@ from enable.api import Component, ComponentEditor
 from traits.api import HasTraits, Constant, Instance
 from traitsui.api import View, UItem
 
+from mapping.api import get_builtin_mbtiles_path
 from mapping.enable.mbtile_manager import MBTileManager
 from mapping.chaco.map import Map
 
@@ -61,8 +62,7 @@ def _create_plot_component():
         marker_size=10,
     )
 
-    tiles_path = pth.join(HERE, "..", "data", "map.mbtiles")
-    tile_cache = MBTileManager(filename=tiles_path,
+    tile_cache = MBTileManager(filename=get_builtin_mbtiles_path(),
                                min_level=2, max_level=4)
     # Need a better way add the overlays
     cmap = renderers[0]

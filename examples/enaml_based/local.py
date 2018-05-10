@@ -1,4 +1,3 @@
-import os.path as pth
 
 import enaml
 from enaml.qt.qt_application import QtApplication
@@ -6,9 +5,8 @@ from enaml.qt.qt_application import QtApplication
 from enable.tools.api import ViewportPanTool
 from traits.api import HasTraits, Instance, Str
 
+from mapping.api import get_builtin_mbtiles_path
 from mapping.enable.api import MappingCanvas, MappingViewport, MBTileManager
-
-HERE = pth.dirname(__file__)
 
 
 class Model(HasTraits):
@@ -20,8 +18,7 @@ class Model(HasTraits):
 
 
 def main():
-    tiles_path = pth.join(HERE, "..", "data", "map.mbtiles")
-    tile_layer = MBTileManager(filename=tiles_path,
+    tile_layer = MBTileManager(filename=get_builtin_mbtiles_path(),
                                min_level=0,
                                max_level=3)
 

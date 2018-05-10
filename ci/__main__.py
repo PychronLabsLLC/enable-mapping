@@ -116,7 +116,7 @@ def test(runtime, environment):
     parameters = get_parameters(runtime, environment)
     environ = {'PYTHONUNBUFFERED': '1'}
     commands = [
-        'edm run -e {environment} -- coverage run -m nose.core mapping -v',
+        'edm run -e {environment} -- coverage run -m nose.core -v mapping',
     ]
 
     # We run in a tempdir to avoid accidentally picking up wrong traitsui

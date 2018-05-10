@@ -29,11 +29,12 @@ setup(
     long_description=open('README.rst').read(),
     include_package_data=True,
     package_data={
-        'mapping.enable': ['fonts/*']
+        'mapping': ['data/*'],
+        'mapping.enable': ['fonts/*'],
     },
     install_requires=__requires__,
     license='BSD',
     packages=find_packages(exclude=['ci']),
     platforms=["Windows", "Linux", "Mac OS-X", "Unix", "Solaris"],
-    zip_safe=True,
+    zip_safe=False,  # We have data files, and use __file__!
 )
