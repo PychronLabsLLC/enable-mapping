@@ -48,8 +48,8 @@ class Map(AbstractOverlay):
                 gc.clip_to_rect(*(component.position + component.bounds))
             else:
                 gc.clip_to_rect(*(self.position + self.bounds))
-            gc.translate_ctm(self.component.padding_left-view_bounds[0],
-                             self.component.padding_bottom-view_bounds[1])
+            gc.translate_ctm(int(self.component.padding_left-view_bounds[0]),
+                             int(self.component.padding_bottom-view_bounds[1]))
             self._canvas._zoom_level = zoom
             self._canvas.draw(gc, view_bounds, mode)
 

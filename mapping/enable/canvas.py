@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import math
 from io import BytesIO
@@ -83,12 +84,14 @@ class MappingCanvas(Canvas):
             endx = int(x+width)
             endy = int(y+height)
 
-            lim = tile_size << zoom
-
-            if starty < 0:
-                starty = 0
-            if endy > lim:
-                endy = lim
+            rows, cols = self.tile_cache.get_data_dimensions(zoom)
+            wrap_x, wrap_y = self.tile_cache.get_wrap_flags()
+            if not wrap_x:
+                startx = max(startx, 0)
+                endx = min(endx, cols * tile_size)
+            if not wrap_y:
+                starty = max(starty, 0)
+                endy = min(endy, rows * tile_size)
 
             gc.set_alpha(self.tile_alpha)
             for tx in range(startx, endx, tile_size):
