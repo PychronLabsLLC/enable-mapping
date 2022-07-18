@@ -59,7 +59,7 @@ class Map(AbstractOverlay):
         return
 
     def do_layout(self, *args, **kw):
-        if self.use_draw_order and self.component is not None:
+        if self.component is not None:
             self._layout_as_overlay(*args, **kw)
         else:
             super(Map, self).do_layout(*args, **kw)
