@@ -9,7 +9,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        runtime: ['3.6', '3.8']
+        runtime: ['3.6']
         os: ['ubuntu-latest']
 
     runs-on: ${{ matrix.os }}
