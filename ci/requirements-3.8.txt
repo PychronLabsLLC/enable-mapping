@@ -1,0 +1,9 @@
+chaco
+coverage
+enable
+geojson
+numpy
+nose
+pyside6
+requests
+six
