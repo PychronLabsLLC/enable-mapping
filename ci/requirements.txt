@@ -4,6 +4,6 @@ enable
 geojson
 numpy
 nose
-pyqt
+pyqt5
 requests
 six
