@@ -45,4 +45,6 @@ jobs:
     - name: Install test environment
       run: python -m ci install --runtime=${{ matrix.runtime }}
     - name: Run tests
-      run: python -m ci test --runtime=${{ matrix.runtime }}
+      uses: GabrielBB/xvfb-action@v1
+      with:
+        run: python -m ci test --runtime=${{ matrix.runtime }}
