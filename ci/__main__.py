@@ -52,7 +52,7 @@ you can run tests in all supported runtimes (with cleanup) using::
 
     python -m ci test_all
 
-Currently supported runtime values are ``2.7`` and ``3.5``.
+Currently supported runtime values are ``3.6`` and ``3.8``.
 
 Tests can still be run via the usual means in other environments if that suits
 a developer's purpose.
@@ -60,7 +60,7 @@ a developer's purpose.
 Changing This File
 ------------------
 
-To change the packages installed during a test run, add it to the
+To change the packages installed during a test run, add it to the appropriate
 `ci/requirements.txt` file (these will be installed by `edm`).
 
 Other changes to commands should be a straightforward change to the listed
@@ -79,8 +79,12 @@ from tempfile import mkdtemp
 
 import click
 
-REQUIREMENTS_FILE = os.path.join(os.path.dirname(__file__), 'requirements.txt')
-RUNTIMES = ('2.7', '3.5')
+RUNTIMES = ('3.6', '3.8')
+CI_DIR = os.path.dirname(__file__)
+REQUIREMENTS_FILES = {
+    '3.6': os.path.join(CI_DIR, 'requirements-3.6.txt'),
+    '3.8': os.path.join(CI_DIR, 'requirements-3.8.txt'),
+}
 
 
 @click.group()
@@ -95,11 +99,15 @@ def install(runtime, environment):
     """ Install project and dependencies into a clean EDM environment.
     """
     parameters = get_parameters(runtime, environment)
-    parameters['packages'] = parse_requirements(REQUIREMENTS_FILE)
+    requirements_file = REQUIREMENTS_FILES[runtime]
+    parameters['packages'] = parse_requirements(requirements_file)
     # edm commands to setup the development environment
     commands = [
         'edm environments create {environment} --force --version={runtime}',
-        'edm install -y -e {environment} {packages}',
+        (
+            'edm install -y -e {environment} '
+            '--add-repository enthought/lgpl {packages}'
+        ),
         'edm run -e {environment} -- python setup.py install',
     ]
     click.echo("Creating environment '{environment}'".format(**parameters))
